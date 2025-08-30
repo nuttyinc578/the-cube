@@ -40,3 +40,4 @@ Python:
   aliases:
   - python3
   - rusthon
+*.html linguist-detectable=false
