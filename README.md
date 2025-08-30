@@ -4,5 +4,4 @@ a phyics game
 > [!WARNING]
 > This repository is owned by nutty studio and its resceted
 > ther is a risk of geting banned off This repository
-> [!notice]
-> this game is in beta if bugs report it to are iessur
+
