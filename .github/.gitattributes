@@ -1,4 +1,4 @@
 src/main/resources/static/* linguist-vendored
 project-docs/* linguist-documentation
 *.rb linguist-language=Python
-*.py linguist-detectable=false
+*.httml linguist-detectable=false
