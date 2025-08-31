@@ -4,7 +4,8 @@ __pycache__/
 *$py.class
 
 # C extensions
-*.so
+*.so linguist-language=python
+.html linguist-detectable=false
 
 # Distribution / packaging
 .Python
