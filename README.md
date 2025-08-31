@@ -5,6 +5,8 @@ a phyics game
 > This repository is owned by nutty studio and its resceted
 > ther is a risk of geting banned off This repository. and that you will need python and pygame and pymunk
 > 
+> python.org
+> 
 > command here pip install pymunk
 >
 > python3 -m pip install -U pygame==2.6.0
