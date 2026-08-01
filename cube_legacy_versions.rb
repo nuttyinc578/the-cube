@@ -2,8 +2,8 @@
 #
 # Copy this file to the add-ons folder.  The game reads the final JSON line.
 # Run it directly to download or launch an original release:
-#   ruby cube_legacy_versions.rb install 1.0
-#   ruby cube_legacy_versions.rb launch 5.0
+#   ruby cube_legacy_versions.rb install 4.0
+#   ruby cube_legacy_versions.rb launch 4.0
 
 require "fileutils"
 require "json"
@@ -19,11 +19,40 @@ RELEASES = {
     filename: "the_cube_beta_5.0.py",
     url: "https://github.com/nuttyinc578/the-cube/releases/download/5.0/thecubebeta5.0.py",
     label: "The Cube Beta 5.0"
+  },
+  "4.0" => {
+    filename: "the_cube_beta_4.0.py",
+    url: "https://github.com/nuttyinc578/the-cube/releases/download/4.1/thecubebeta4.0.py",
+    label: "The Cube Beta 4.0"
+  },
+  "3.0" => {
+    filename: "the_cube_beta_3.0.py",
+    url: "https://github.com/nuttyinc578/the-cube/releases/download/3.0/thecubebeta.py",
+    label: "The Cube Beta 3.0"
+  },
+  "2.0" => {
+    filename: "the_cube_beta_2.0.py",
+    url: "https://github.com/nuttyinc578/the-cube/releases/download/2.0/my.pygame.v2.0.py",
+    label: "The Cube Beta 2.0 demo"
+  },
+  "5.1" => {
+    filename: "the_cube_beta_v5_1_christmas.py",
+    label: "The Cube Beta 5.1 Christmas",
+    local: true
   }
 }.freeze
 
 def legacy_dir
   File.join(__dir__, "legacy_versions")
+end
+
+def source_path(version)
+  info = release_for(version)
+  if info[:local]
+    File.expand_path(File.join(__dir__, "..", "the cube beta", "legacy_christmas", info[:filename]))
+  else
+    File.join(legacy_dir, info[:filename])
+  end
 end
 
 def release_for(version)
@@ -35,7 +64,12 @@ end
 def install(version)
   info = release_for(version)
   FileUtils.mkdir_p(legacy_dir)
-  target = File.join(legacy_dir, info[:filename])
+  target = source_path(version)
+  if info[:local]
+    abort "The local Christmas 5.1 source is missing: #{target}" unless File.file?(target)
+    puts "Christmas 5.1 is already installed: #{target}"
+    return target
+  end
   puts "Downloading #{info[:label]} from the official GitHub release..."
   URI.open(info[:url]) { |source| File.binwrite(target, source.read) }
   puts "Saved to: #{target}"
@@ -43,7 +77,7 @@ end
 
 def launch(version)
   info = release_for(version)
-  source = File.join(legacy_dir, info[:filename])
+  source = source_path(version)
   abort "#{info[:label]} is not installed. Run: install #{version}" unless File.file?(source)
 
   python = ENV.fetch("PYTHON", "python")
@@ -56,7 +90,7 @@ def manifest
     name: "Legacy Versions: Ruby Companion",
     version: "1.0.0",
     author: "Cube Community",
-    description: "Ruby launcher for official 1.0 and 5.0 source releases; never replaces Summer Edition.",
+    description: "Ruby launcher for official 1.0 through 5.1 source releases, including local Christmas 5.1; never replaces Summer Edition.",
     shapes: [
       { name: "Ruby Retro Gem", kind: "polygon", sides: 6, size: 30, color: [205, 75, 120], weight: 0.9 }
     ],
@@ -79,7 +113,7 @@ if $PROGRAM_NAME == __FILE__ && !ARGV.empty?
     abort "Usage: launch VERSION" unless version
     launch(version)
   else
-    warn "Usage: ruby #{File.basename(__FILE__)} [list|install|launch] [1.0|5.0]"
+    warn "Usage: ruby #{File.basename(__FILE__)} [list|install|launch] [#{RELEASES.keys.join('|')}]"
   end
 else
   puts JSON.generate(manifest)
