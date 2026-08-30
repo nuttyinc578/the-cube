@@ -1,6 +1,6 @@
 # the-cube
 [![cube physics engine](https://img.shields.io/github/v/release/nuttyinc578/CPE-OPEN-source?style=for-the-badge&label=release)](https://github.com/nuttyinc578/CPE-OPEN-source/releases/latest)
-[![CPE STATUS]((https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml/badge.svg)](https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml)
+[![CPE STATUS](https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml/badge.svg)](https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml)
 [![download](https://img.shields.io/github/v/release/nuttyinc578/the-cube?style=for-the-badge&label=release)](https://github.com/nuttyinc578/the-cube/releases/latest)
 a phyics game
 <img width="989" height="374" alt="Screenshot 2025-08-29 195812" src="https://github.com/user-attachments/assets/50f34bb9-069c-4244-80d5-fd3b988ed236" />
