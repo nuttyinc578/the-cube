@@ -1,5 +1,5 @@
 # the-cube
-![cube physics engine used](https://github.com/nuttyinc578/CPE-OPEN-source)green
+[![cube physics engine](https://img.shields.io/github/v/release/nuttyinc578/the-cube)](https://github.com/nuttyinc578/the-cube/releases/latest)
 a phyics game
 <img width="989" height="374" alt="Screenshot 2025-08-29 195812" src="https://github.com/user-attachments/assets/50f34bb9-069c-4244-80d5-fd3b988ed236" />
 > [!WARNING]
