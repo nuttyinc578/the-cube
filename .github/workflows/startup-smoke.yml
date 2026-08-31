@@ -12,9 +12,6 @@ jobs:
   startup:
     runs-on: windows-latest
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
       - name: Create diagnostic artifact
         shell: pwsh
         run: Set-Content -LiteralPath 'startup-diagnostic.txt' -Value 'Official actions can run.'
