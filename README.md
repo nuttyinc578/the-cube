@@ -39,7 +39,7 @@ Run the automated tests with:
 python -m unittest test_summer_game cpe.tests.test_cpe cpe.tests.test_full_stack -v
 ```
 
-Build the complete Windows downloads with Inno Setup 6 installed:
+Build the complete Windows downloads with Inno Setup 6 installed. The build downloads the verified Pixabay music from the immutable 6.2.1 source commit and checks its SHA-256 hash:
 
 ```powershell
 .\tools\Prepare-Release.ps1 -Version 6.2.1

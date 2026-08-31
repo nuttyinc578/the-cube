@@ -77,6 +77,7 @@ Remove-SafeChild $stagingPath
 Remove-SafeChild $releasePath
 New-Item -ItemType Directory -Path $distPath, $installerOutputPath, $stagingPath, $releasePath -Force | Out-Null
 
+& (Join-Path $PSScriptRoot 'Get-FallMusic.ps1')
 Invoke-Checked -Program 'python' -Arguments @('-m', 'PyInstaller', '--noconfirm', '--clean', 'summer_build.spec')
 
 Push-Location -LiteralPath (Join-Path $repoRoot 'cpe\go-cache')

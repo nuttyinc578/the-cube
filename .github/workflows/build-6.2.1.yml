@@ -26,6 +26,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Download verified Fall Edition music
+        shell: pwsh
+        run: .\tools\Get-FallMusic.ps1
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
