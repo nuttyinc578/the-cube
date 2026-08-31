@@ -1,0 +1,17 @@
+name: Actions startup diagnostic
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  startup:
+    runs-on: windows-latest
+    steps:
+      - name: Confirm custom jobs can start
+        shell: pwsh
+        run: Write-Host 'GitHub-hosted Windows jobs can start.'
