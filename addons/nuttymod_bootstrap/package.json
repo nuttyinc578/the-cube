@@ -1,0 +1,6 @@
+{
+  "name": "nuttymod-bootstrap",
+  "private": true,
+  "type": "commonjs",
+  "engines": {"node": ">=22"}
+}

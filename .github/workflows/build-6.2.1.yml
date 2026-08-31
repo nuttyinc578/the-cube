@@ -1,0 +1,94 @@
+name: Build The Cube Beta 6.2.1
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 6.2.1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cube-beta-6.2.1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    name: Build Windows downloads
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.25.x"
+          cache: false
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Run game and CPE tests
+        shell: pwsh
+        env:
+          SDL_VIDEODRIVER: dummy
+          SDL_AUDIODRIVER: dummy
+        run: python -m unittest test_summer_game cpe.tests.test_cpe cpe.tests.test_full_stack -v
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress --yes
+
+      - name: Build installer and portable download
+        shell: pwsh
+        run: .\tools\Prepare-Release.ps1 -Version 6.2.1
+
+      - name: Upload nightly.link artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: The-Cube-Beta-6.2.1-Windows
+          path: release-download/*
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Publish GitHub Release
+        if: github.ref == 'refs/tags/6.2.1'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag release-download/* --clobber --repo $env:GITHUB_REPOSITORY
+            gh release edit $tag --title "The Cube Beta Fall Edition 6.2.1" --notes-file RELEASE_NOTES_6.2.1.md --latest --repo $env:GITHUB_REPOSITORY
+          }
+          else {
+            gh release create $tag release-download/* --verify-tag --title "The Cube Beta Fall Edition 6.2.1" --notes-file RELEASE_NOTES_6.2.1.md --latest --repo $env:GITHUB_REPOSITORY
+          }

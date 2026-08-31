@@ -1,0 +1,15 @@
+{
+  "name": "cube-physics-engine-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dependency-free Node.js command compiler for Cube Physics Engine",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/server.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

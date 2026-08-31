@@ -1,21 +1,14 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+The Cube Beta 6.2.x is the currently supported release line.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 6.1.x   | :white_check_mark: |
-| 6.0.x   | :white_check_mark:                |
-| 5.1.x   | :x: |
-| < 5.0   | :x:                |
+> [!CAUTION]
+> The Cube Beta 5.0 is no longer supported. It does not receive bug fixes, compatibility updates, security updates, or technical support. Upgrade to 6.2.1.
 
-## Reporting a Vulnerability
+Older 6.1.x, 6.0.x, and 5.x releases are not supported.
 
-Use this section to tell people how to report a vulnerability.
+## Reporting a vulnerability
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Please use GitHub's private vulnerability reporting for this repository when it is available. Do not publish exploit details in a public issue. Include the affected version, operating system, reproduction steps, and the impact you observed.

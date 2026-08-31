@@ -206,3 +206,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# The Cube Beta generated release outputs
+installer-output/
+package-staging/
+release-download/
+cpe/**/bin/
+cpe/**/obj/
+cpe/java-client/out/
+!summer_build.spec

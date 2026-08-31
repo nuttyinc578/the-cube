@@ -1,0 +1,6 @@
+// Example C# add-on for The Cube Beta via NuttyMod Loader.
+// The loader also accepts the conventional .cs extension.
+
+using System;
+
+Console.WriteLine("{\"name\":\"Nutty Kernel Spark\",\"version\":\"1.0\",\"author\":\"nutty'inc\",\"description\":\"C#-powered spark shape and CLR Lift event.\",\"shapes\":[{\"name\":\"Kernel Spark\",\"kind\":\"polygon\",\"sides\":7,\"size\":31,\"color\":[255,192,74],\"weight\":0.9}],\"events\":[{\"name\":\"CLR Lift\",\"duration\":7,\"wind\":-260,\"gravity_scale\":0.18,\"spawn_count\":6,\"banner\":\"The C# CLR Lift is active!\",\"color\":[255,205,92]}]}");

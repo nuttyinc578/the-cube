@@ -1,0 +1,5 @@
+{
+  "stable_manifest_url": "",
+  "beta_manifest_url": "",
+  "instructions": "Add trusted HTTPS manifest URLs. Every downloaded file must include a SHA-256 hash and an allowed target."
+}
