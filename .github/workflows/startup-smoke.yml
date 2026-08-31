@@ -12,6 +12,16 @@ jobs:
   startup:
     runs-on: windows-latest
     steps:
-      - name: Confirm custom jobs can start
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Create diagnostic artifact
         shell: pwsh
-        run: Write-Host 'GitHub-hosted Windows jobs can start.'
+        run: Set-Content -LiteralPath 'startup-diagnostic.txt' -Value 'Official actions can run.'
+
+      - name: Upload diagnostic artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: startup-diagnostic
+          path: startup-diagnostic.txt
+          if-no-files-found: error
