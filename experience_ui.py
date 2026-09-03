@@ -28,7 +28,6 @@ from cube_core import (
 from theme_system import (
     CPE_DEV_BETA_VERSION,
     DeveloperGate,
-    LEGACY_PROFILES,
     THEME_DISCLAIMER,
     THEMES_NIGHTLY_URL,
     UPDATE_NIGHTLY_URL,
@@ -36,6 +35,12 @@ from theme_system import (
     ThemePublisher,
     ThemeStore,
     validate_theme_pair,
+)
+from legacy_versions import (
+    GitHubLegacyInstaller,
+    LegacyDownloadCancelled,
+    LegacyInstallError,
+    LegacyRelease,
 )
 
 
@@ -127,6 +132,7 @@ def _experience_init(original_init: Any):
         original_init(app)
         app.theme_store = ThemeStore(app_path(), bundle_path("themes"))
         app.theme_publisher = ThemePublisher(app.theme_store)
+        app.legacy_installer = GitHubLegacyInstaller(app_path(), app.theme_store)
         app.developer_gate = DeveloperGate()
         app.theme_drop_files: dict[str, Path] = {}
         app._store_theme_ids: set[str] = set()
@@ -535,19 +541,99 @@ def _developer_menu(app: Any) -> None:
                     app.notify(str(exc), 7)
 
 
+def _legacy_download_screen(app: Any, release: LegacyRelease) -> str:
+    latest_name = "Preparing GitHub download"
+    expected = max(0, release.total_bytes)
+
+    def progress(name: str, received: int, total: int) -> None:
+        nonlocal latest_name, expected
+        latest_name = name
+        expected = max(expected, total)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                raise LegacyDownloadCancelled("Download cancelled because the game was closed")
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                raise LegacyDownloadCancelled("Legacy download cancelled")
+        app.draw_background(pygame.time.get_ticks() / 1000)
+        veil = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        veil.fill((8, 25, 42, 165))
+        app.screen.blit(veil, (0, 0))
+        app.draw_panel(pygame.Rect(160, 120, 780, 475), 252)
+        heading = app.large.render(f"DOWNLOADING CUBE {release.tag}", True, NAVY)
+        app.screen.blit(heading, heading.get_rect(center=(WIDTH // 2, 180)))
+        source = app.small.render("Official GitHub release  /  nuttyinc578/the-cube", True, MUTED)
+        app.screen.blit(source, source.get_rect(center=(WIDTH // 2, 226)))
+        asset = app.font.render(latest_name[:62], True, INK)
+        app.screen.blit(asset, asset.get_rect(center=(WIDTH // 2, 300)))
+        if expected:
+            ratio = min(1.0, received / expected)
+        else:
+            ratio = min(0.96, received / max(1, received + 2_000_000))
+        track = pygame.Rect(235, 350, 630, 34)
+        pygame.draw.rect(app.screen, (210, 220, 224), track, border_radius=17)
+        fill = pygame.Rect(track.x, track.y, int(track.width * ratio), track.height)
+        if fill.width:
+            pygame.draw.rect(app.screen, (222, 108, 39), fill, border_radius=17)
+        amount = app.small.render(
+            f"{received / 1_048_576:.1f} MB"
+            + (f" / {expected / 1_048_576:.1f} MB" if expected else ""),
+            True,
+            INK,
+        )
+        app.screen.blit(amount, amount.get_rect(center=track.center))
+        note = app.small.render("A restore backup was created first. Press Esc to cancel.", True, MUTED)
+        app.screen.blit(note, note.get_rect(center=(WIDTH // 2, 455)))
+        pygame.display.flip()
+        app.clock.tick(FPS)
+
+    try:
+        progress(latest_name, 0, expected)
+        folder, backup = app.legacy_installer.download(release, progress)
+        message = app.legacy_installer.launch(release, folder)
+        return f"{message} Backup: {backup.name}"
+    except (LegacyInstallError, OSError) as exc:
+        return f"Legacy install stopped: {exc}"
+
+
 def _legacy_menu(app: Any) -> None:
     button_type = app._experience_button_type
-    entries = list(LEGACY_PROFILES)
-    buttons = []
-    for index, profile in enumerate(entries):
-        column = index % 2
-        row = index // 2
-        accent = (255, 181, 165) if profile["id"] == "5.0" else (255, 238, 190)
-        buttons.append(
-            button_type((90 + column * 470, 205 + row * 62, 440, 50), profile["name"], accent)
-        )
-    back = button_type((410, 604, 280, 48), "BACK", WHITE)
+    releases: list[LegacyRelease] = []
+    status = "Contacting the official GitHub releases page..."
+
+    def refresh() -> None:
+        nonlocal releases, status
+        app.draw_background(pygame.time.get_ticks() / 1000)
+        shade = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        shade.fill((8, 35, 57, 145))
+        app.screen.blit(shade, (0, 0))
+        app.draw_panel(pygame.Rect(220, 225, 660, 210), 250)
+        label = app.large.render("LOADING GITHUB RELEASES", True, NAVY)
+        app.screen.blit(label, label.get_rect(center=(WIDTH // 2, 290)))
+        detail = app.small.render("nuttyinc578/the-cube  /  releases", True, MUTED)
+        app.screen.blit(detail, detail.get_rect(center=(WIDTH // 2, 350)))
+        pygame.display.flip()
+        try:
+            releases = app.legacy_installer.releases()
+            status = f"Found {len(releases)} historical releases on GitHub."
+        except LegacyInstallError as exc:
+            releases = []
+            status = str(exc)
+
+    refresh()
     while True:
+        visible = releases[:12]
+        release_buttons = []
+        for index, release in enumerate(visible):
+            column = index % 2
+            row = index // 2
+            accent = (255, 181, 165) if release.unsupported else (255, 238, 190)
+            release_buttons.append(
+                button_type((65 + column * 500, 205 + row * 58, 470, 46), release.label, accent)
+            )
+        refresh_button = button_type((260, 582, 270, 48), "REFRESH GITHUB", MINT)
+        back_button = button_type((570, 582, 270, 48), "BACK", WHITE)
+        all_buttons = release_buttons + [refresh_button, back_button]
+
         events = pygame.event.get()
         if not app.common_events(events):
             raise SystemExit
@@ -556,32 +642,41 @@ def _legacy_menu(app: Any) -> None:
                 return
         app.draw_background(pygame.time.get_ticks() / 1000)
         shade = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        shade.fill((8, 35, 57, 120))
+        shade.fill((8, 35, 57, 125))
         app.screen.blit(shade, (0, 0))
         app.title_block(
-            "OG library / safe compatibility",
-            "Legacy Versions",
-            "All editions run through the rewritten 6.2.2 engine; 5.0 remains unsupported.",
-            48,
+            "Actual downloads / official GitHub releases",
+            "OG Versions",
+            "Downloads and launches the real historical release assets.",
+            42,
         )
-        selected = app.wait_click(buttons + [back], events)
+        status_label = app.tiny.render(status[:100], True, WHITE)
+        app.screen.blit(status_label, status_label.get_rect(center=(WIDTH // 2, 175)))
+        selected = app.wait_click(all_buttons, events)
+        app.draw_toast()
         pygame.display.flip()
         app.clock.tick(FPS)
         if selected is None:
             continue
-        if selected == len(buttons):
+        if selected == len(release_buttons) + 1:
             return
-        profile = entries[selected]
-        detail = (
-            f"Install the {profile['name']} presentation as a compatibility profile on the current 6.2.2 engine. "
-            f"Edition: {profile['edition']}. CPE uses {CPE_DEV_BETA_VERSION}. "
-            "No obsolete executable is downloaded. A backup is created first."
+        if selected == len(release_buttons):
+            refresh()
+            continue
+        release = visible[selected]
+        asset_names = ", ".join(asset.name for asset in release.assets)
+        warning = (
+            f"This downloads the exact {release.tag} release asset(s) from github.com/nuttyinc578/the-cube: "
+            f"{asset_names}. The current configuration and active theme are backed up first. "
+            "Installers, MSI packages, EXEs, and old Python releases are launched from a separate "
+            "legacy-versions folder. Older releases may lack current fixes and security protections."
         )
-        if _confirm(app, f"INSTALL {profile['name'].upper()}?", detail, "INSTALL LEGACY PROFILE"):
-            backup = app.theme_store.activate_legacy(profile["id"])
-            _refresh_themes(app)
-            app.notify(f"Installed {profile['name']}. Backup: {backup.name}", 8)
-            return
+        if release.unsupported:
+            warning += " This version is unsupported and receives no fixes or technical support."
+        accept = "DOWNLOAD UNSUPPORTED" if release.unsupported else "DOWNLOAD + INSTALL"
+        if _confirm(app, f"INSTALL CUBE {release.tag} FROM GITHUB?", warning, accept):
+            status = _legacy_download_screen(app, release)
+            app.notify(status, 12)
 
 
 def _run(app: Any) -> None:
@@ -626,7 +721,7 @@ def _run(app: Any) -> None:
 
 
 def install_experience_ui(game_app: type[Any], button_type: type[Any]) -> None:
-    """Attach the 6.2.2 experience without disturbing the physics implementation."""
+    """Attach the 6.2.3 experience without disturbing the physics implementation."""
     if getattr(game_app, "_experience_ui_installed", False):
         return
     game_app._experience_ui_installed = True

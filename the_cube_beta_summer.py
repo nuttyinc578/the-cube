@@ -1,4 +1,4 @@
-"""The Cube Beta 6.2.2 - Fall Edition major rewrite."""
+"""The Cube Beta 6.2.3 - Fall Edition with GitHub OG installs."""
 
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 #define MyAppName "The Cube Beta Fall Edition"
-#define MyAppVersion "6.2.2"
+#define MyAppVersion "6.2.3"
 #define MyAppPublisher "nutty'inc"
 #define MyAppExeName "The Cube Beta Fall.exe"
 
@@ -14,7 +14,7 @@ AppSupportURL=https://github.com/nuttyinc578
 AppUpdatesURL=https://github.com/nuttyinc578
 AppCopyright=Copyright (c) 2026 nutty'inc
 AppComments=Interactive physics sandbox powered by CPE and IPE
-VersionInfoVersion=6.2.2.0
+VersionInfoVersion=6.2.3.0
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} installer
 VersionInfoCopyright=Copyright (c) 2026 nutty'inc
@@ -24,7 +24,7 @@ DisableProgramGroupPage=yes
 AllowNoIcons=yes
 LicenseFile=..\LICENCE.txt
 OutputDir=..\installer-output
-OutputBaseFilename=The-Cube-Beta-Fall-6.2.2-Setup
+OutputBaseFilename=The-Cube-Beta-Fall-6.2.3-Setup
 SetupIconFile=..\icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
@@ -53,6 +53,7 @@ Name: "{app}\addons"
 Name: "{app}\addons\mods"
 Name: "{app}\themes\inbox"
 Name: "{app}\backup\themes"
+Name: "{app}\legacy-versions"
 
 [Files]
 ; Main Fall Edition game and documentation
@@ -109,7 +110,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Launch The Cube Beta Fall Editi
 [Code]
 procedure InitializeWizard;
 begin
-  WizardForm.WelcomeLabel1.Caption := 'Welcome to The Cube Beta Fall Edition 6.2.2 Setup';
+  WizardForm.WelcomeLabel1.Caption := 'Welcome to The Cube Beta Fall Edition 6.2.3 Setup';
   WizardForm.WelcomeLabel2.Caption :=
     'This setup installs the Fall Edition game, CPE physics support, the verified Theme Store, and the current add-ons.' + #13#10 + #13#10 +
     'You must read and accept the MIT License before installation can continue.';

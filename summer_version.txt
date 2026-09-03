@@ -16,11 +16,11 @@ VSVersionInfo(
         [
           StringStruct('CompanyName', "nutty'inc"),
           StringStruct('FileDescription', 'The Cube Beta - Fall Edition'),
-          StringStruct('FileVersion', '6.2.2'),
+          StringStruct('FileVersion', '6.2.3'),
           StringStruct('InternalName', 'the_cube_beta_fall'),
           StringStruct('OriginalFilename', 'The Cube Beta Fall.exe'),
           StringStruct('ProductName', 'The Cube Beta'),
-          StringStruct('ProductVersion', '6.2.2'),
+          StringStruct('ProductVersion', '6.2.3'),
           StringStruct('LegalCopyright', "Copyright (c) 2026 nutty'inc")
         ]
       )

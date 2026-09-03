@@ -1,16 +1,18 @@
-name: Build The Cube Beta 6.2.2
+name: Build The Cube Beta 6.2.3
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - 6.2.2
+      - 6.2.3
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: cube-beta-6.2.2-${{ github.ref }}
+  group: cube-beta-6.2.3-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -55,12 +57,12 @@ jobs:
         shell: pwsh
         run: python -m pip install --disable-pip-version-check -r requirements.txt
 
-      - name: Run game, theme, and CPE tests
+      - name: Run game, theme, OG installer, and CPE tests
         shell: pwsh
         env:
           SDL_VIDEODRIVER: dummy
           SDL_AUDIODRIVER: dummy
-        run: python -m unittest test_summer_game test_theme_system cpe.tests.test_cpe cpe.tests.test_full_stack -v
+        run: python -m unittest test_summer_game test_theme_system test_legacy_versions cpe.tests.test_cpe cpe.tests.test_full_stack -v
 
       - name: Install Inno Setup
         shell: pwsh
@@ -68,19 +70,19 @@ jobs:
 
       - name: Build installer and portable download
         shell: pwsh
-        run: .\tools\Prepare-Release.ps1 -Version 6.2.2
+        run: .\tools\Prepare-Release.ps1 -Version 6.2.3
 
       - name: Upload nightly.link artifact
         uses: actions/upload-artifact@v4
         with:
-          name: The-Cube-Beta-6.2.2-Windows
+          name: The-Cube-Beta-6.2.3-Windows
           path: release-download/*
           if-no-files-found: error
           retention-days: 90
           compression-level: 0
 
       - name: Publish GitHub Release
-        if: github.ref == 'refs/tags/6.2.2'
+        if: github.ref == 'refs/tags/6.2.3'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -89,8 +91,8 @@ jobs:
           gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag release-download/* --clobber --repo $env:GITHUB_REPOSITORY
-            gh release edit $tag --title "The Cube Beta Fall Edition 6.2.2" --notes-file RELEASE_NOTES_6.2.2.md --latest --repo $env:GITHUB_REPOSITORY
+            gh release edit $tag --title "The Cube Beta Fall Edition 6.2.3" --notes-file RELEASE_NOTES_6.2.3.md --latest --repo $env:GITHUB_REPOSITORY
           }
           else {
-            gh release create $tag release-download/* --verify-tag --title "The Cube Beta Fall Edition 6.2.2" --notes-file RELEASE_NOTES_6.2.2.md --latest --repo $env:GITHUB_REPOSITORY
+            gh release create $tag release-download/* --verify-tag --title "The Cube Beta Fall Edition 6.2.3" --notes-file RELEASE_NOTES_6.2.3.md --latest --repo $env:GITHUB_REPOSITORY
           }

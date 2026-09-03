@@ -24,7 +24,7 @@ from cpe import CPEBridgeRuntime, CubePhysicsEngine, NumericCommand
 
 
 APP_TITLE = "The Cube Beta Fall Edition"
-VERSION = "6.2.2"
+VERSION = "6.2.3"
 WIDTH, HEIGHT = 1100, 720
 FLOOR_Y = HEIGHT - 54
 FPS = 60

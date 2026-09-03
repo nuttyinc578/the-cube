@@ -220,6 +220,7 @@ cpe/java-client/out/
 # The Cube Beta runtime theme state and reversible backups
 settings.json
 backup/
+legacy-versions/
 themes/inbox/*
 themes/publish-work/*
 themes/.theme_state.json

@@ -26,8 +26,8 @@ THEMES_NIGHTLY_URL = (
     "The-Cube-Beta-Themes.zip"
 )
 UPDATE_NIGHTLY_URL = (
-    "https://nightly.link/nuttyinc578/the-cube/workflows/build-6.2.2/main/"
-    "The-Cube-Beta-6.2.2-Windows.zip"
+    "https://nightly.link/nuttyinc578/the-cube/workflows/build-6.2.3/main/"
+    "The-Cube-Beta-6.2.3-Windows.zip"
 )
 
 THEME_DISCLAIMER = (
