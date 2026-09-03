@@ -1,0 +1,21 @@
+"""Declarative manifest for the built-in Fall Classic community theme."""
+
+THEME = {
+    "format_version": 1,
+    "id": "fall-classic",
+    "name": "Fall Classic",
+    "version": "1.0.0",
+    "author": "nutty'inc",
+    "description": "Warm maple leaves, harvest sunlight, and a deep autumn lake.",
+    "menu_title": "THE CUBE BETA: FALL CLASSIC",
+    "loading_message": "Sweeping leaves into the physics sandbox",
+    "palette": {
+        "sky_top": [78, 104, 137],
+        "sky_bottom": [241, 158, 91],
+        "water": [81, 107, 91],
+        "sand": [105, 65, 39],
+        "sun": [255, 193, 74],
+        "accent": [221, 102, 43],
+        "panel": [255, 247, 229],
+    },
+}

@@ -1,0 +1,52 @@
+name: Verify and Publish Theme Store
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "themes/**"
+      - "theme_system.py"
+      - "test_theme_system.py"
+      - ".github/workflows/themes.yml"
+  pull_request:
+    paths:
+      - "themes/**"
+      - "theme_system.py"
+      - "test_theme_system.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cube-theme-store-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-themes:
+    name: Verify themes and create nightly bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Run theme safety tests
+        run: python -m unittest test_theme_system -v
+
+      - name: Verify every published theme
+        run: python -c "from theme_system import validate_theme_repository; records = validate_theme_repository('themes'); print(f'Verified {len(records)} theme(s)')"
+
+      - name: Upload nightly.link theme artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-Cube-Beta-Themes
+          path: themes/
+          if-no-files-found: error
+          retention-days: 90

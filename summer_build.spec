@@ -11,6 +11,7 @@ a = Analysis(
         ("fall_music.mp3", "."),
         ("THIRD_PARTY_NOTICES.txt", "."),
         ("addons", "addons"),
+        ("themes", "themes"),
     ],
     hiddenimports=["_nuttymod_connection", "_nuttymod_v140_patch"],
     hookspath=[],

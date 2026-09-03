@@ -20,3 +20,4 @@ __all__ = [
 ]
 
 __version__ = "1.0.0"
+__dev_beta_version__ = "0.0.2-dev-beta"

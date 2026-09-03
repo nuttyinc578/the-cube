@@ -216,3 +216,11 @@ cpe/**/bin/
 cpe/**/obj/
 cpe/java-client/out/
 !summer_build.spec
+
+# The Cube Beta runtime theme state and reversible backups
+settings.json
+backup/
+themes/inbox/*
+themes/publish-work/*
+themes/.theme_state.json
+cpe/.cpe_channel.json

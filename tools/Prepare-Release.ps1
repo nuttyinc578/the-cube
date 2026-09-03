@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+$')]
-    [string]$Version = '6.2.1'
+    [string]$Version = '6.2.2'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -52,7 +52,7 @@ function Copy-FilteredTree {
             $segments -contains 'tests') {
             continue
         }
-        if ($file.Name -in @('NUTTYMOD_TERMS.md', '_nuttymod_account_state.json', 'nuttymod_restart.flag')) {
+        if ($file.Name -in @('NUTTYMOD_TERMS.md', '_nuttymod_account_state.json', 'nuttymod_restart.flag', '.theme_state.json', '.cpe_channel.json')) {
             continue
         }
         if ($file.Name -like '*.bak' -or $file.Name -like '*.backup-*') {
@@ -105,6 +105,7 @@ Invoke-Checked -Program 'go' -Arguments @('build', '-trimpath', '-o', $authOutpu
 Copy-Item -LiteralPath 'README.md' -Destination (Join-Path $distPath 'README.md') -Force
 Copy-Item -LiteralPath 'Run The Cube Beta CPE.cmd', 'Run CPE Aspire.cmd', 'Run CPE Java Client.cmd' -Destination $distPath -Force
 Copy-FilteredTree (Join-Path $repoRoot 'addons') (Join-Path $distPath 'addons')
+Copy-FilteredTree (Join-Path $repoRoot 'themes') (Join-Path $distPath 'themes')
 Copy-Item -LiteralPath $authOutput -Destination (Join-Path $distPath 'addons\nuttymod_bootstrap\nuttymod_auth.exe') -Force
 Copy-FilteredTree (Join-Path $repoRoot 'cpe') (Join-Path $distPath 'cpe')
 

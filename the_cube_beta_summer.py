@@ -1,4 +1,4 @@
-"""The Cube Beta 6.2.1 - Fall Edition."""
+"""The Cube Beta 6.2.2 - Fall Edition major rewrite."""
 
 from __future__ import annotations
 
@@ -1170,6 +1170,12 @@ class GameApp:
             WHITE,
         )
         self.screen.blit(help_text, help_text.get_rect(center=(WIDTH // 2, HEIGHT - 19)))
+
+
+from experience_ui import install_experience_ui
+
+
+install_experience_ui(GameApp, Button)
 
 
 def main() -> None:

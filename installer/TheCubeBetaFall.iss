@@ -1,5 +1,5 @@
 #define MyAppName "The Cube Beta Fall Edition"
-#define MyAppVersion "6.2.1"
+#define MyAppVersion "6.2.2"
 #define MyAppPublisher "nutty'inc"
 #define MyAppExeName "The Cube Beta Fall.exe"
 
@@ -14,7 +14,7 @@ AppSupportURL=https://github.com/nuttyinc578
 AppUpdatesURL=https://github.com/nuttyinc578
 AppCopyright=Copyright (c) 2026 nutty'inc
 AppComments=Interactive physics sandbox powered by CPE and IPE
-VersionInfoVersion=6.2.1.0
+VersionInfoVersion=6.2.2.0
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} installer
 VersionInfoCopyright=Copyright (c) 2026 nutty'inc
@@ -24,7 +24,7 @@ DisableProgramGroupPage=yes
 AllowNoIcons=yes
 LicenseFile=..\LICENCE.txt
 OutputDir=..\installer-output
-OutputBaseFilename=The-Cube-Beta-Fall-6.2.1-Setup
+OutputBaseFilename=The-Cube-Beta-Fall-6.2.2-Setup
 SetupIconFile=..\icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
@@ -51,6 +51,8 @@ Name: "addonsshortcut"; Description: "Add an Add-ons Folder shortcut to the Star
 [Dirs]
 Name: "{app}\addons"
 Name: "{app}\addons\mods"
+Name: "{app}\themes\inbox"
+Name: "{app}\backup\themes"
 
 [Files]
 ; Main Fall Edition game and documentation
@@ -80,6 +82,9 @@ Source: "..\dist\addons\mods\*"; DestDir: "{app}\addons\mods"; Flags: ignorevers
 Source: "..\dist\addons\nuttymod_bootstrap\nuttymod_*"; DestDir: "{app}\addons\nuttymod_bootstrap"; Flags: ignoreversion
 Source: "..\dist\addons\nuttymod_bootstrap\package.json"; DestDir: "{app}\addons\nuttymod_bootstrap"; Flags: ignoreversion
 
+; Verified Theme Store. Runtime inbox and backups start empty.
+Source: "..\dist\themes\*"; DestDir: "{app}\themes"; Flags: ignoreversion recursesubdirs createallsubdirs
+
 ; CPE bridge, Go cache, Java client, and Aspire host
 Source: "..\dist\cpe\README.md"; DestDir: "{app}\cpe"; Flags: ignoreversion
 Source: "..\dist\cpe\node-bridge\*"; DestDir: "{app}\cpe\node-bridge"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -94,6 +99,7 @@ Source: "..\dist\cpe\CPE.AppHost\Properties\launchSettings.json"; DestDir: "{app
 [Icons]
 Name: "{group}\The Cube Beta Fall Edition"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
 Name: "{group}\Add-ons Folder"; Filename: "{sys}\explorer.exe"; Parameters: """{app}\addons"""; Tasks: addonsshortcut
+Name: "{group}\Theme Store Folder"; Filename: "{sys}\explorer.exe"; Parameters: """{app}\themes"""
 Name: "{group}\MIT License"; Filename: "{app}\LICENCE.txt"
 Name: "{autodesktop}\The Cube Beta Fall Edition"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
@@ -103,9 +109,9 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Launch The Cube Beta Fall Editi
 [Code]
 procedure InitializeWizard;
 begin
-  WizardForm.WelcomeLabel1.Caption := 'Welcome to The Cube Beta Fall Edition 6.2.1 Setup';
+  WizardForm.WelcomeLabel1.Caption := 'Welcome to The Cube Beta Fall Edition 6.2.2 Setup';
   WizardForm.WelcomeLabel2.Caption :=
-    'This setup installs the Fall Edition game, CPE physics support, and the current add-ons.' + #13#10 + #13#10 +
+    'This setup installs the Fall Edition game, CPE physics support, the verified Theme Store, and the current add-ons.' + #13#10 + #13#10 +
     'You must read and accept the MIT License before installation can continue.';
   WizardForm.LicenseAcceptedRadio.Caption := 'I accept the MIT License';
   WizardForm.LicenseNotAcceptedRadio.Caption := 'I do not accept the MIT License';

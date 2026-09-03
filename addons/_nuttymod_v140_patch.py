@@ -1525,27 +1525,28 @@ def _modified_main_menu(app: Any) -> str:
     fps = int(getattr(_RUNTIME["_GAME_MODULE"], "FPS", 60))
     pygame_version, pymunk_version = _RUNTIME["_runtime_versions"]()
 
-    labels = [
-        "PLAY SOLO",
-        "PLAY MULTIPLAYER",
-        "NUTTYMOD ADD-ONS",
-        "NUTTYMOD MODS  |  STABLE",
-        "NUTTYMOD STUDIOS",
-        "NUTTYMOD SETTINGS",
-        "QUIT",
+    entries = [
+        ("PLAY SOLO", "single", yellow),
+        ("PLAY MULTIPLAYER", "multiplayer", mint),
+        ("THEME STORE", "themes", (192, 163, 255)),
     ]
-    actions = [
-        "single",
-        "multiplayer",
-        "addons",
-        "mods",
-        "studios",
-        "nutty_settings",
-        "quit",
-    ]
-    accents = [yellow, mint, white, white, mint, white, (255, 181, 165)]
+    theme_store = getattr(app, "theme_store", None)
+    if theme_store is not None and theme_store.state().get("developer_enabled"):
+        entries.append(("DEVELOPER MODE", "developer", (255, 180, 103)))
+    entries.extend(
+        [
+            ("NUTTYMOD ADD-ONS", "addons", white),
+            ("NUTTYMOD MODS  |  STABLE", "mods", white),
+            ("NUTTYMOD STUDIOS", "studios", mint),
+            ("NUTTYMOD SETTINGS", "nutty_settings", white),
+            ("QUIT", "quit", (255, 181, 165)),
+        ]
+    )
+    labels = [entry[0] for entry in entries]
+    actions = [entry[1] for entry in entries]
+    accents = [entry[2] for entry in entries]
     buttons = [
-        button_type((590, 205 + index * 56, 420, 44), label, accents[index])
+        button_type((590, 190 + index * 50, 420, 40), label, accents[index])
         for index, label in enumerate(labels)
     ]
 
