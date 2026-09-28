@@ -261,20 +261,49 @@ class CubePhysicsEngine:
             ],
         }
 
+    def health_report(self) -> dict[str, Any]:
+        """Return a compact runtime health report for repair tools and bridges."""
+        snapshot = self.snapshot()
+        return {
+            "engine": snapshot["engine"],
+            "protocol": snapshot["protocol"],
+            "physics_online": self.space is not None,
+            "particles_online": self.particles is not None,
+            "body_count": len(snapshot["bodies"]),
+            "particle_count": snapshot["particle_count"],
+            "fixed_step_hz": round(1 / self._fixed_step),
+            "quality": "enhanced",
+        }
+
     def render(self, surface: Any, *, clear: bool = True) -> None:
         import pygame
 
         if clear:
-            surface.fill((24, 32, 42))
-        pygame.draw.line(surface, (202, 132, 65), (0, self.floor_y), (self.width, self.floor_y), 5)
+            for y in range(self.height):
+                ratio = y / max(1, self.height)
+                color = (int(12 + 17 * ratio), int(25 + 28 * ratio), int(47 + 39 * ratio))
+                pygame.draw.line(surface, color, (0, y), (self.width, y))
+        floor_glow = pygame.Surface((self.width, 22), pygame.SRCALPHA)
+        for y in range(22):
+            pygame.draw.line(floor_glow, (55, 215, 232, max(0, 75 - y * 3)), (0, y), (self.width, y))
+        surface.blit(floor_glow, (0, self.floor_y - 3))
+        pygame.draw.line(surface, (96, 235, 242), (0, self.floor_y), (self.width, self.floor_y), 4)
         self.particles.draw(surface)
         for record in self.bodies.values():
             outline = tuple(max(0, channel - 55) for channel in record.color)
             if isinstance(record.shape, pymunk.Circle):
                 center = round(record.body.position.x), round(record.body.position.y)
                 radius = max(1, round(record.shape.radius))
+                pygame.draw.circle(surface, (5, 15, 30), (center[0] + 7, center[1] + 9), radius)
                 pygame.draw.circle(surface, record.color, center, radius)
                 pygame.draw.circle(surface, outline, center, radius, 3)
+                highlight_radius = max(2, radius // 5)
+                pygame.draw.circle(
+                    surface,
+                    tuple(min(255, channel + 70) for channel in record.color),
+                    (center[0] - radius // 3, center[1] - radius // 3),
+                    highlight_radius,
+                )
                 spoke = record.body.local_to_world((record.shape.radius * 0.7, 0))
                 pygame.draw.line(surface, (250, 244, 226), center, (round(spoke.x), round(spoke.y)), 3)
             else:
@@ -282,5 +311,9 @@ class CubePhysicsEngine:
                     (round(point.x), round(point.y))
                     for point in (record.body.local_to_world(vertex) for vertex in record.shape.get_vertices())
                 ]
+                shadow = [(x + 7, y + 9) for x, y in points]
+                pygame.draw.polygon(surface, (5, 15, 30), shadow)
                 pygame.draw.polygon(surface, record.color, points)
                 pygame.draw.polygon(surface, outline, points, 3)
+                if len(points) >= 2:
+                    pygame.draw.aalines(surface, (245, 252, 255), True, points)

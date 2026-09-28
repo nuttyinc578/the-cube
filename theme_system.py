@@ -18,16 +18,16 @@ from typing import Any, Callable, Iterable
 
 
 THEME_FORMAT_VERSION = 1
-CPE_STABLE_VERSION = "1.0.0"
-CPE_DEV_BETA_VERSION = "0.0.2-dev-beta"
+CPE_STABLE_VERSION = "0.0.2"
+CPE_DEV_BETA_VERSION = "0.0.2-error-beta"
 THEME_REPOSITORY = "nuttyinc578/the-cube"
 THEMES_NIGHTLY_URL = (
     "https://nightly.link/nuttyinc578/the-cube/workflows/themes/main/"
     "The-Cube-Beta-Themes.zip"
 )
 UPDATE_NIGHTLY_URL = (
-    "https://nightly.link/nuttyinc578/the-cube/workflows/build-6.2.3/main/"
-    "The-Cube-Beta-6.2.3-Windows.zip"
+    "https://nightly.link/nuttyinc578/the-cube/workflows/build-6.3.0/main/"
+    "The-Cube-Beta-6.3.0-Windows.zip"
 )
 
 THEME_DISCLAIMER = (

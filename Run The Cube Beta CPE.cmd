@@ -1,8 +1,8 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-if exist "%~dp0The Cube Beta Fall.exe" (
-  "%~dp0The Cube Beta Fall.exe" %*
+if exist "%~dp0The Cube Beta Error Update.exe" (
+  "%~dp0The Cube Beta Error Update.exe" %*
 ) else (
   py -3.10 "%~dp0the_cube_beta_summer.py" %*
 )

@@ -19,5 +19,5 @@ __all__ = [
     "parse_numeric_line",
 ]
 
-__version__ = "1.0.0"
-__dev_beta_version__ = "0.0.2-dev-beta"
+__version__ = "0.0.2"
+__dev_beta_version__ = "0.0.2-error-beta"

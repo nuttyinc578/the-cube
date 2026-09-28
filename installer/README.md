@@ -1,6 +1,6 @@
 # The Cube Beta custom installer
 
-`TheCubeBetaFall.iss` builds a per-user Windows installer for The Cube Beta Fall Edition 6.2.1.
+`TheCubeBetaFall.iss` builds a per-user Windows installer for The Cube Beta Error Update 6.3.0.
 
 The installer:
 

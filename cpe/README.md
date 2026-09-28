@@ -1,6 +1,6 @@
 # Cube Physics Engine (CPE)
 
-CPE is permanently embedded in The Cube Beta Fall Edition while preserving the existing menus, controls, add-ons, multiplayer, UI, GUI, and UX.
+CPE 0.0.2 is permanently embedded in The Cube Beta Error Update while preserving the physics sandbox, add-ons, multiplayer, Theme Store, and OG installer.
 
 It combines:
 
@@ -16,7 +16,7 @@ CPE converts a fixed command language into numbers. It never evaluates arbitrary
 
 ## Easiest Windows launch
 
-- Double-click `Run CPE Aspire.cmd` to start Go, Node, and The Cube Beta Fall Edition together.
+- Double-click `Run CPE Aspire.cmd` to start Go, Node, and The Cube Beta Error Update together.
 - Double-click `Run The Cube Beta CPE.cmd` to run the CPE-powered game directly; it automatically connects when Aspire is available and keeps working in embedded mode when it is not.
 - Double-click `Run CPE Java Client.cmd` after Aspire starts to send a Java polygon command into the running game.
 - `Run CPE Offline.cmd` remains available as the standalone CPE/IPE laboratory.

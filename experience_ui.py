@@ -213,7 +213,7 @@ def _loading_screen(app: Any, duration: float = 4.8) -> bool:
         app.screen.blit(percent, percent.get_rect(center=track.center))
 
         chips = [
-            f"CPE {state.get('cpe_version', '1.0.0')}",
+            f"CPE {state.get('cpe_version', '0.0.2')}",
             f"THEME {str(state.get('active_theme', 'maple')).upper()}",
             f"{verified_count} VERIFIED STORE THEME{'S' if verified_count != 1 else ''}",
         ]
@@ -721,7 +721,7 @@ def _run(app: Any) -> None:
 
 
 def install_experience_ui(game_app: type[Any], button_type: type[Any]) -> None:
-    """Attach the 6.2.3 experience without disturbing the physics implementation."""
+    """Attach the base experience without disturbing the physics implementation."""
     if getattr(game_app, "_experience_ui_installed", False):
         return
     game_app._experience_ui_installed = True

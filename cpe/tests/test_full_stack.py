@@ -21,6 +21,8 @@ GO_BINARY = GO_DIRECTORY / "bin" / "cpe-go-cache.exe"
 NODE_SERVER = ROOT / "cpe" / "node-bridge" / "server.js"
 JAVA_CLASSES = ROOT / "cpe" / "java-client" / "out"
 JAVA_SOURCE = ROOT / "cpe" / "java-client" / "src" / "main" / "java" / "com" / "nuttyinc" / "cpe" / "CpeClient.java"
+JAVAC = shutil.which("javac")
+JAVA = str(Path(JAVAC).with_name("java.exe")) if JAVAC and Path(JAVAC).with_name("java.exe").is_file() else shutil.which("java")
 
 
 def free_port() -> int:
@@ -45,7 +47,7 @@ def wait_for_health(url: str, timeout: float = 8) -> dict:
 
 
 @unittest.skipUnless(
-    shutil.which("node") and shutil.which("go") and shutil.which("java") and shutil.which("javac"),
+    shutil.which("node") and shutil.which("go") and JAVA and JAVAC,
     "Node.js, Go, Java, and javac are required for the full CPE stack test",
 )
 class FullStackTests(unittest.TestCase):
@@ -53,7 +55,7 @@ class FullStackTests(unittest.TestCase):
     def setUpClass(cls):
         GO_BINARY.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["go", "build", "-o", str(GO_BINARY), "."], cwd=GO_DIRECTORY, check=True)
-        subprocess.run(["javac", "-d", str(JAVA_CLASSES), str(JAVA_SOURCE)], cwd=ROOT, check=True)
+        subprocess.run([JAVAC, "-d", str(JAVA_CLASSES), str(JAVA_SOURCE)], cwd=ROOT, check=True)
 
     def test_java_to_node_to_embedded_game_to_go_cache(self):
         go_port = free_port()
@@ -91,7 +93,7 @@ class FullStackTests(unittest.TestCase):
             # Queue Java input before PhysicsWorld exists, matching the licence/menu flow.
             java = subprocess.run(
                 [
-                    "java",
+                    JAVA,
                     "-cp",
                     str(JAVA_CLASSES),
                     "com.nuttyinc.cpe.CpeClient",

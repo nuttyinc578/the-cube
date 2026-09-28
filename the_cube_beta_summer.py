@@ -1,4 +1,4 @@
-"""The Cube Beta 6.2.3 - Fall Edition with GitHub OG installs."""
+"""The Cube Beta 6.3.0 - Error Update, powered by CPE 0.0.2."""
 
 from __future__ import annotations
 
@@ -267,7 +267,7 @@ class GameApp:
         except OSError:
             licence_text = (
                 "The MIT Licence could not be loaded.\n\n"
-                "Please reinstall The Cube Beta Fall Edition."
+                "Please reinstall The Cube Beta Error Update."
             )
             licence_loaded = False
 
@@ -1173,9 +1173,11 @@ class GameApp:
 
 
 from experience_ui import install_experience_ui
+from error_update import install_error_update
 
 
 install_experience_ui(GameApp, Button)
+install_error_update(GameApp, Button)
 
 
 def main() -> None:

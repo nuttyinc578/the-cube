@@ -225,3 +225,4 @@ themes/inbox/*
 themes/publish-work/*
 themes/.theme_state.json
 cpe/.cpe_channel.json
+error_update_state.json
