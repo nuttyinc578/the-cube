@@ -1,7 +1,7 @@
-#define MyAppName "The Cube Beta Error Update"
-#define MyAppVersion "6.3.0"
+#define MyAppName "The Cube Beta Halloween Update"
+#define MyAppVersion "6.4.0"
 #define MyAppPublisher "nutty'inc"
-#define MyAppExeName "The Cube Beta Error Update.exe"
+#define MyAppExeName "The Cube Beta Halloween Update.exe"
 
 [Setup]
 AppId={{728303EA-A1F8-438C-BEEF-0F164EB35252}
@@ -13,18 +13,18 @@ AppPublisherURL=https://github.com/nuttyinc578
 AppSupportURL=https://github.com/nuttyinc578
 AppUpdatesURL=https://github.com/nuttyinc578
 AppCopyright=Copyright (c) 2026 nutty'inc
-AppComments=Error Update physics sandbox powered by CPE 0.0.2 and IPE
-VersionInfoVersion=6.3.0.0
+AppComments=Halloween Broken Lands physics sandbox powered by CPE and IPE
+VersionInfoVersion=6.4.0.0
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} installer
 VersionInfoCopyright=Copyright (c) 2026 nutty'inc
-DefaultDirName={localappdata}\Programs\The Cube Beta Error Update
-DefaultGroupName=The Cube Beta Error Update
+DefaultDirName={localappdata}\Programs\The Cube Beta Halloween Update
+DefaultGroupName=The Cube Beta Halloween Update
 DisableProgramGroupPage=yes
 AllowNoIcons=yes
 LicenseFile=..\LICENCE.txt
 OutputDir=..\installer-output
-OutputBaseFilename=The-Cube-Beta-Error-Update-6.3.0-Setup
+OutputBaseFilename=The-Cube-Beta-Halloween-Update-6.4.0-Setup
 SetupIconFile=..\icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
@@ -54,10 +54,12 @@ Name: "{app}\addons\mods"
 Name: "{app}\themes\inbox"
 Name: "{app}\backup\themes"
 Name: "{app}\legacy-versions"
+Name: "{app}\backup\og"
+Name: "{app}\og-recovery"
 
 [Files]
-; Main Fall Edition game and documentation
-Source: "..\dist\The Cube Beta Error Update.exe"; DestDir: "{app}"; Flags: ignoreversion
+; Main Halloween Edition game and documentation
+Source: "..\dist\The Cube Beta Halloween Update.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENCE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\THIRD_PARTY_NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
@@ -98,21 +100,21 @@ Source: "..\dist\cpe\CPE.AppHost\Program.cs"; DestDir: "{app}\cpe\CPE.AppHost"; 
 Source: "..\dist\cpe\CPE.AppHost\Properties\launchSettings.json"; DestDir: "{app}\cpe\CPE.AppHost\Properties"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\The Cube Beta Error Update"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
+Name: "{group}\The Cube Beta Halloween Update"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
 Name: "{group}\Add-ons Folder"; Filename: "{sys}\explorer.exe"; Parameters: """{app}\addons"""; Tasks: addonsshortcut
 Name: "{group}\Theme Store Folder"; Filename: "{sys}\explorer.exe"; Parameters: """{app}\themes"""
 Name: "{group}\MIT License"; Filename: "{app}\LICENCE.txt"
-Name: "{autodesktop}\The Cube Beta Error Update"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autodesktop}\The Cube Beta Halloween Update"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch The Cube Beta Error Update"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch The Cube Beta Halloween Update"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [Code]
 procedure InitializeWizard;
 begin
-  WizardForm.WelcomeLabel1.Caption := 'Welcome to The Cube Beta Error Update 6.3.0 Setup';
+  WizardForm.WelcomeLabel1.Caption := 'Welcome to The Cube Beta Halloween Update 6.4.0 Setup';
   WizardForm.WelcomeLabel2.Caption :=
-    'This setup installs the Error Update, CPE 0.0.2 physics support, the verified Theme Store, and the current add-ons.' + #13#10 + #13#10 +
+    'This setup installs the Halloween Broken Lands update, CPE physics support, OG.exe backup-first recovery, the Theme Store, and the current add-ons.' + #13#10 + #13#10 +
     'You must read and accept the MIT License before installation can continue.';
   WizardForm.LicenseAcceptedRadio.Caption := 'I accept the MIT License';
   WizardForm.LicenseNotAcceptedRadio.Caption := 'I do not accept the MIT License';

@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+$')]
-    [string]$Version = '6.3.0'
+    [string]$Version = '6.4.0'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -120,7 +120,7 @@ if (-not $iscc) {
 }
 Invoke-Checked -Program $iscc -Arguments @('installer\TheCubeBetaFall.iss')
 
-$portableName = "The-Cube-Beta-Error-Update-$Version-Portable"
+$portableName = "The-Cube-Beta-Halloween-Update-$Version-Portable"
 $portablePath = Join-Path $stagingPath $portableName
 New-Item -ItemType Directory -Path $portablePath -Force | Out-Null
 Copy-Item -Path (Join-Path $distPath '*') -Destination $portablePath -Recurse -Force
@@ -129,7 +129,7 @@ Copy-Item -LiteralPath 'LICENCE.txt', 'THIRD_PARTY_NOTICES.txt' -Destination $po
 $portableZip = Join-Path $releasePath "$portableName.zip"
 Compress-Archive -Path (Join-Path $portablePath '*') -DestinationPath $portableZip -CompressionLevel Optimal
 
-$setupName = "The-Cube-Beta-Error-Update-$Version-Setup.exe"
+$setupName = "The-Cube-Beta-Halloween-Update-$Version-Setup.exe"
 $compiledSetup = Join-Path $installerOutputPath $setupName
 if (-not (Test-Path -LiteralPath $compiledSetup)) {
     throw "Expected installer was not created: $compiledSetup"

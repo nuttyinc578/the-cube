@@ -1,4 +1,4 @@
-"""The Cube Beta 6.3.0 - Error Update, powered by CPE 0.0.2."""
+"""The Cube Beta 6.4.0 - Halloween Update, powered by CPE and IPE."""
 
 from __future__ import annotations
 
@@ -267,7 +267,7 @@ class GameApp:
         except OSError:
             licence_text = (
                 "The MIT Licence could not be loaded.\n\n"
-                "Please reinstall The Cube Beta Error Update."
+                "Please reinstall The Cube Beta Halloween Update."
             )
             licence_loaded = False
 
@@ -1174,10 +1174,12 @@ class GameApp:
 
 from experience_ui import install_experience_ui
 from error_update import install_error_update
+from halloween_update import install_halloween_update
 
 
 install_experience_ui(GameApp, Button)
 install_error_update(GameApp, Button)
+install_halloween_update(GameApp, Button)
 
 
 def main() -> None:

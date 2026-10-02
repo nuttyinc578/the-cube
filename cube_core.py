@@ -23,8 +23,8 @@ import pymunk
 from cpe import CPEBridgeRuntime, CubePhysicsEngine, NumericCommand
 
 
-APP_TITLE = "The Cube Beta Error Update"
-VERSION = "6.3.0"
+APP_TITLE = "The Cube Beta Halloween Update"
+VERSION = "6.4.0"
 WIDTH, HEIGHT = 1100, 720
 FLOOR_Y = HEIGHT - 54
 FPS = 60
@@ -54,6 +54,13 @@ FALL_PALETTE = [
 SUMMER_PALETTE = FALL_PALETTE
 
 THEMES = {
+    "halloween": {
+        "sky_top": (13, 9, 28),
+        "sky_bottom": (74, 34, 86),
+        "water": (49, 37, 67),
+        "sand": (28, 22, 35),
+        "sun": (255, 128, 40),
+    },
     "maple": {
         "sky_top": (72, 126, 158),
         "sky_bottom": (244, 184, 115),
@@ -78,7 +85,7 @@ THEMES = {
 }
 
 DEFAULT_SETTINGS = {
-    "theme": "maple",
+    "theme": "halloween",
     "gravity": 900,
     "fullscreen": False,
     "music": True,

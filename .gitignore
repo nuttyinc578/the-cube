@@ -209,6 +209,7 @@ __marimo__/
 
 # The Cube Beta generated release outputs
 fall_music.mp3
+halloween_music.mp3
 installer-output/
 package-staging/
 release-download/
@@ -226,3 +227,6 @@ themes/publish-work/*
 themes/.theme_state.json
 cpe/.cpe_channel.json
 error_update_state.json
+halloween_update_state.json
+og-current-version.json
+og-recovery/

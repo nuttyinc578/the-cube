@@ -1,27 +1,29 @@
-# The Cube Beta — Error Update 6.3.0
+# The Cube Beta — Halloween Update 6.4.0
 
 [![CPE release](https://img.shields.io/github/v/release/nuttyinc578/CPE-OPEN-source?style=for-the-badge&label=CPE)](https://github.com/nuttyinc578/CPE-OPEN-source/releases/latest)
 [![CPE status](https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml/badge.svg)](https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml)
 
-[![Build The Cube Beta 6.3.0](https://github.com/nuttyinc578/the-cube/actions/workflows/build-6.3.0.yml/badge.svg?branch=main)](https://github.com/nuttyinc578/the-cube/actions/workflows/build-6.3.0.yml)
-[![Download 6.3.0](https://img.shields.io/badge/Download-6.3.0_Error_Update-0087d1?style=for-the-badge&logo=windows)](https://nightly.link/nuttyinc578/the-cube/workflows/build-6.3.0/main/The-Cube-Beta-6.3.0-Windows.zip)
+[![Build The Cube Beta 6.4.0](https://github.com/nuttyinc578/the-cube/actions/workflows/build-6.4.0.yml/badge.svg?branch=main)](https://github.com/nuttyinc578/the-cube/actions/workflows/build-6.4.0.yml)
+[![Download 6.4.0](https://img.shields.io/badge/Download-6.4.0_Halloween-ff7a18?style=for-the-badge&logo=windows)](https://nightly.link/nuttyinc578/the-cube/workflows/build-6.4.0/main/The-Cube-Beta-6.4.0-Windows.zip)
 [![Theme Store](https://github.com/nuttyinc578/the-cube/actions/workflows/themes.yml/badge.svg?branch=main)](https://github.com/nuttyinc578/the-cube/actions/workflows/themes.yml)
 [![Download themes](https://img.shields.io/badge/nightly.link-download_themes-7c3aed?style=for-the-badge)](https://nightly.link/nuttyinc578/the-cube/workflows/themes/main/The-Cube-Beta-Themes.zip)
 
 > [!CAUTION]
-> **The Cube Beta 5.0 is no longer supported.** It no longer receives bug fixes, compatibility updates, security updates, or technical support. Upgrade to 6.3.0.
+> **The Cube Beta 5.0 is no longer supported.** It no longer receives bug fixes, compatibility updates, security updates, or technical support. Upgrade to 6.4.0.
 
-The Cube Beta is an interactive physics sandbox powered by the Cube Physics Engine (CPE) and Integrated Particle Engine (IPE). The 6.3.0 Error Update starts with a deliberately corrupted blue-screen menu and **ERROR 21CPE**. **Repair CPE** creates backups, restores verified Node.js, Go, Java, and .NET Aspire bridge sources, runs real Pymunk and particle self-tests, and unlocks a new fluent menu. The Error Update loading screen remains after repair by design.
+The Cube Beta is an interactive physics sandbox powered by the Cube Physics Engine (CPE) and Integrated Particle Engine (IPE). Version 6.4.0 adds an animated Halloween world and a mysterious **SECURITY ???** door. It opens the full-screen Broken Lands terminal: log in to the abandoned computer, run `OG.exe -list`, and recover a supported historical version with `OG.exe -6.3.0`, `OG.exe -6.2.2`, or `OG.exe -5.1`.
+
+OG recovery is deliberately backup-first. Portable releases download into staging, ZIP paths are checked, SHA-256 file manifests are written, and a full restore point is created under `backup/og` before replacement is offered. The old 6.2.1 nightly is shown as unavailable because its GitHub Actions artifact expired.
 
 ## Download
 
-- [Download the latest successful main-branch artifact with nightly.link](https://nightly.link/nuttyinc578/the-cube/workflows/build-6.3.0/main/The-Cube-Beta-6.3.0-Windows.zip)
-- [Open the 6.3.0 GitHub Release](https://github.com/nuttyinc578/the-cube/releases/tag/6.3.0)
+- [Download the latest successful main-branch artifact with nightly.link](https://nightly.link/nuttyinc578/the-cube/workflows/build-6.4.0/main/The-Cube-Beta-6.4.0-Windows.zip)
+- [Open the 6.4.0 GitHub Release](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.0)
 
 The nightly.link ZIP contains:
 
-- `The-Cube-Beta-Error-Update-6.3.0-Setup.exe`
-- `The-Cube-Beta-Error-Update-6.3.0-Portable.zip`
+- `The-Cube-Beta-Halloween-Update-6.4.0-Setup.exe`
+- `The-Cube-Beta-Halloween-Update-6.4.0-Portable.zip`
 - `SHA256SUMS.txt`
 
 The custom installer displays the MIT License and requires acceptance before installation. The Windows files are not digitally signed, so SmartScreen may show an unknown-publisher warning.
@@ -38,13 +40,13 @@ python the_cube_beta_summer.py
 Run the automated tests with:
 
 ```powershell
-python -m unittest test_error_update test_summer_game test_theme_system test_legacy_versions cpe.tests.test_cpe cpe.tests.test_full_stack -v
+python -m unittest test_halloween_music test_og_recovery test_error_update test_summer_game test_theme_system test_legacy_versions cpe.tests.test_cpe cpe.tests.test_full_stack -v
 ```
 
 Build the complete Windows downloads with Inno Setup 6 installed. The build downloads the verified Pixabay music from its immutable archived source commit and checks its SHA-256 hash:
 
 ```powershell
-.\tools\Prepare-Release.ps1 -Version 6.3.0
+.\tools\Prepare-Release.ps1 -Version 6.4.0
 ```
 
 ## Theme Store
@@ -67,4 +69,4 @@ Drop Python (`.py`) or Ruby (`.rb`) add-ons into the `addons` folder. See `addon
 
 ## License and music
 
-The game source is licensed under the [MIT License](LICENSE). The Fall Edition music attribution is listed in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
+The game source is licensed under the [MIT License](LICENSE). “Halloween Music” by Sound4Stock and the fallback Fall Edition track are licensed third-party content; details are in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt). The exact Halloween track is downloaded from its official Pixabay page on first launch and is not distributed as a standalone asset.

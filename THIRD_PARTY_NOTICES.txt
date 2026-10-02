@@ -1,5 +1,19 @@
-THE CUBE BETA FALL EDITION
+THE CUBE BETA HALLOWEEN UPDATE
 THIRD-PARTY NOTICES
+
+Music: "Halloween Music"
+Artist: Sound4Stock
+Source: https://pixabay.com/music/happy-childrens-tunes-halloween-music-609427/
+Licence: Pixabay Content License
+Licence information: https://pixabay.com/service/license-summary/
+Added: October 2, 2026
+
+The Halloween track is downloaded from its official Pixabay page on first
+launch and is used only as part of The Cube Beta experience. It is third-party
+copyrighted content, not part of the MIT-licensed source code, and may not be
+redistributed as a standalone music file.
+
+Fallback Fall Edition music
 
 Music: "Autumn Leaves"
 Artist: LofCosmos

@@ -32,7 +32,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="The Cube Beta Error Update",
+    name="The Cube Beta Halloween Update",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
