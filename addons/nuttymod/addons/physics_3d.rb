@@ -1,4 +1,5 @@
 require "json"
+# Optional NuttyMod add-on; keep physics_3d.py alongside this companion.
 
 # Physics 3D is a companion manifest for physics_3d.py. The game loads the
 # shapes and events below, while the Python half also reads the physics_3d

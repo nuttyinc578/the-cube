@@ -1,5 +1,7 @@
 """Interactive 2.5D renderer and physics extension for The Cube Beta.
 
+Optional NuttyMod add-on, isolated from the base game's automatic scan.
+
 The companion ``physics_3d.rb`` file supplies the dimensional content,
 material values, and shared color theme. Controls inside the simulation:
 

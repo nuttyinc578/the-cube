@@ -13,6 +13,11 @@ ROOT = Path(__file__).resolve().parent
 
 
 class NuttyModIsolationTests(unittest.TestCase):
+    def test_optional_packs_are_only_in_nuttymod_addons(self):
+        for name in ('fun_mode.py', 'fun_mode.rb', 'physics_3d.py', 'physics_3d.rb'):
+            self.assertFalse((ROOT / 'addons' / name).exists(), name)
+            self.assertTrue((ROOT / 'addons' / 'nuttymod' / 'addons' / name).is_file(), name)
+
     def test_addon_manager_does_not_scan_nuttymod_subfolder(self):
         with tempfile.TemporaryDirectory() as folder:
             addons = Path(folder)

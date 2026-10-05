@@ -1,7 +1,8 @@
 """Fun Mode party pack and GUI extension for The Cube Beta.
 
-Drop this file and ``fun_mode.rb`` into the game's add-ons folder, then reload
-add-ons. The Ruby companion supplies extra content and the shared GUI colors.
+This optional pack lives in NuttyMod's isolated add-ons folder; it is not
+automatically loaded by the base game. Keep ``fun_mode.rb`` alongside it.
+The Ruby companion supplies extra content and the shared GUI colors.
 """
 
 from __future__ import annotations

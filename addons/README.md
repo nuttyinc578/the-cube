@@ -14,6 +14,10 @@ interfere with regular Python and Ruby add-ons. Its old Permanent Install
 rewrite is disabled in isolated mode. The Halloween `SECURITY ???` door and
 Broken Lands terminal are part of the main game, not NuttyMod.
 
+Fun Mode and Physics3D are stored under `addons/nuttymod/addons`, with their
+Python and Ruby companions together. They are not automatically loaded by the
+base game.
+
 ## Python
 
 Create a file such as `my_addon.py`:

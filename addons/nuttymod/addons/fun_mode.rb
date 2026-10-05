@@ -1,4 +1,5 @@
 require "json"
+# Optional NuttyMod add-on; isolated from the base game's automatic scan.
 
 # Fun Mode's Ruby companion pack. The game reads the JSON printed on the
 # final output line.

@@ -24,6 +24,8 @@ the local health service, connection helpers, and update configuration. Generate
 connection files and recovery data stay below this folder:
 
 - `nuttymod_bootstrap/`: Node.js, Go, PowerShell, HTML, and Electron helpers
+- `addons/`: optional Fun Mode and Physics3D Python/Ruby pairs. They stay
+  together for companion-file lookup and are not scanned by the base game.
 - `update_backups/`: connection-repair and legacy recovery backups
 - `.nuttymod_state.json`: local loader state, if NuttyMod is manually run
 - `.nuttymod_disabled.json`: local disabled add-on state

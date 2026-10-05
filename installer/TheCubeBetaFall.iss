@@ -99,6 +99,11 @@ Source: "..\dist\cpe\*"; DestDir: "{app}\cpe"; Flags: ignoreversion recursesubdi
 [InstallDelete]
 ; Installer updates restore the default loader lock and replace the trusted baseline.
 Type: files; Name: "{app}\cpeloader_state.json"
+; Move optional gameplay extensions out of the normal scan path during upgrade.
+Type: files; Name: "{app}\addons\fun_mode.py"
+Type: files; Name: "{app}\addons\fun_mode.rb"
+Type: files; Name: "{app}\addons\physics_3d.py"
+Type: files; Name: "{app}\addons\physics_3d.rb"
 ; Remove NuttyMod's old auto-scanned layout during upgrade.
 Type: files; Name: "{app}\addons\_nuttymod_connection.py"
 Type: files; Name: "{app}\addons\_nuttymod_v140_patch.py"
