@@ -281,9 +281,10 @@ def _load_error_logo(app: Any) -> pygame.Surface | None:
 
 
 def _apply_icon(app: Any) -> None:
-    selected = "normal_icon.ico" if app.cpe_repair.repaired else "icon.ico"
     try:
-        pygame.display.set_icon(pygame.image.load(str(bundle_path(selected))))
+        pygame.display.set_icon(pygame.transform.smoothscale(
+            pygame.image.load(str(bundle_path("halloween_cube_icon.png"))), (64, 64)
+        ))
     except (pygame.error, OSError):
         pass
 

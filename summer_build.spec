@@ -7,6 +7,7 @@ a = Analysis(
     datas=[
         ("icon.ico", "."),
         ("normal_icon.ico", "."),
+        ("halloween_cube_icon.png", "."),
         ("error_update_logo.png", "."),
         ("LICENCE.txt", "."),
         ("click.mp3", "."),

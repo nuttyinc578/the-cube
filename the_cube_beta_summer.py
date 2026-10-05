@@ -79,7 +79,9 @@ class GameApp:
         self.screen: pygame.Surface
         self.apply_display()
         try:
-            pygame.display.set_icon(pygame.image.load(str(bundle_path("icon.ico"))))
+            pygame.display.set_icon(pygame.transform.smoothscale(
+                pygame.image.load(str(bundle_path("halloween_cube_icon.png"))), (64, 64)
+            ))
         except (pygame.error, OSError):
             pass
         pygame.display.set_caption(f"{APP_TITLE} v{VERSION}")
