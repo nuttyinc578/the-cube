@@ -124,21 +124,36 @@ class FullStackTests(unittest.TestCase):
                 time.sleep(0.01)
             self.assertTrue(any(entity.owner == "cpe-java" for entity in world.entities.values()))
 
+            # Spawn particles are short-lived simulation state, not an acknowledgement
+            # of network delivery. Publish through the normal game cache cadence,
+            # then freeze simulation while waiting for the asynchronous bridge.
+            # Advancing frames during that wait can expire the particles and replace
+            # the pending snapshot before a busy CI runner delivers it to Go.
+            self.assertGreater(len(world.particle_snapshot()), 0)
+            world.update(0.2)
+            expected_particles = world.particle_snapshot()
+            self.assertGreater(len(expected_particles), 0)
+
             deadline = time.monotonic() + 6
             cached = None
             while time.monotonic() < deadline:
                 with urllib.request.urlopen(f"http://127.0.0.1:{go_port}/cache", timeout=1) as response:
                     cached = json.loads(response.read().decode("utf-8"))
                 state = cached.get("state", {})
-                if state.get("cache_source") == "cube_core" and state.get("bodies"):
+                if (
+                    state.get("cache_source") == "cube_core"
+                    and any(body.get("owner") == "cpe-java" for body in state.get("bodies", []))
+                    and state.get("particle_count") == len(expected_particles)
+                    and state.get("particles") == expected_particles
+                ):
                     break
-                world.update(1 / 60)
                 time.sleep(0.05)
             self.assertIsNotNone(cached)
             self.assertEqual(cached["state"]["engine"], "CPE")
             self.assertEqual(cached["state"]["cache_source"], "cube_core")
             self.assertEqual(cached["state"]["bodies"][0]["owner"], "cpe-java")
             self.assertGreater(cached["state"]["particle_count"], 0)
+            self.assertEqual(cached["state"]["particles"], expected_particles)
         finally:
             if world is not None:
                 world.close()
