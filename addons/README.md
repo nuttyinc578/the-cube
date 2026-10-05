@@ -6,6 +6,14 @@ Dock window.
 
 Add-ons execute code on your computer. Only use files from creators you trust.
 
+## NuttyMod isolation
+
+NuttyMod is stored separately under `addons/nuttymod`. The game intentionally
+does not scan subfolders, so NuttyMod cannot load during a normal launch or
+interfere with regular Python and Ruby add-ons. Its old Permanent Install
+rewrite is disabled in isolated mode. The Halloween `SECURITY ???` door and
+Broken Lands terminal are part of the main game, not NuttyMod.
+
 ## Python
 
 Create a file such as `my_addon.py`:

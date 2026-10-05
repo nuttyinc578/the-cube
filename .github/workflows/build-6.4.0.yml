@@ -59,7 +59,7 @@ jobs:
         env:
           SDL_VIDEODRIVER: dummy
           SDL_AUDIODRIVER: dummy
-        run: python -m unittest test_halloween_music test_og_recovery test_error_update test_summer_game test_theme_system test_legacy_versions cpe.tests.test_cpe cpe.tests.test_full_stack -v
+        run: python -m unittest test_cpeloader test_halloween_music test_og_recovery test_nuttymod_isolation test_error_update test_summer_game test_theme_system test_legacy_versions cpe.tests.test_cpe cpe.tests.test_full_stack -v
 
       - name: Install Inno Setup
         shell: pwsh

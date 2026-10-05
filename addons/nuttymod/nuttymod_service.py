@@ -24,6 +24,8 @@ def _game_root() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys.executable).resolve().parent
     location = Path(__file__).resolve().parent
+    if location.name.casefold() == "nuttymod" and location.parent.name.casefold() == "addons":
+        return location.parent.parent
     return location.parent if location.name.casefold() == "addons" else location
 
 
@@ -38,7 +40,10 @@ def _read_json(path: Path) -> dict[str, Any]:
 def health_report(game_root: Path | None = None) -> dict[str, Any]:
     root = _game_root() if game_root is None else Path(game_root).resolve()
     addons = root / "addons"
-    state = _read_json(addons / ".nuttymod_permanent_install.json")
+    isolated = addons / "nuttymod"
+    state = _read_json(isolated / ".nuttymod_permanent_install.json")
+    if not state:
+        state = _read_json(addons / ".nuttymod_permanent_install.json")
     if not state:
         state = _read_json(root / "dist" / "addons" / ".nuttymod_permanent_install.json")
     permanent = bool(state)
@@ -50,7 +55,7 @@ def health_report(game_root: Path | None = None) -> dict[str, Any]:
         and (source_root / "nuttymod_cube_core.py").is_file()
     )
     jars = {
-        name: (root / name).is_file() or (addons / name).is_file()
+        name: (isolated / name).is_file() or (root / name).is_file() or (addons / name).is_file()
         for name in PROFILE_JARS
     }
     return {

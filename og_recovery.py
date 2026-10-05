@@ -304,6 +304,10 @@ Start-Process -FilePath (Join-Path $appRoot $launchRelative) -WorkingDirectory $
     ) -> RecoveryPlan:
         key = normalize_version(version_value)
         version = OG_VERSIONS[key]
+        if version.mode != 'installer':
+            from cpeloader import CPELoader
+            try: CPELoader(self.app_root).require_in_game_update()
+            except PermissionError as exc: raise OGRecoveryError(str(exc)) from exc
         if not version.available:
             raise OGRecoveryError(version.note or "That OG release is unavailable")
         if progress:
@@ -345,6 +349,10 @@ Start-Process -FilePath (Join-Path $appRoot $launchRelative) -WorkingDirectory $
 
     def launch(self, plan: RecoveryPlan, *, pid: int | None = None) -> None:
         """Launch the prepared external installer/updater after explicit UI consent."""
+        if plan.mode != 'installer':
+            from cpeloader import CPELoader
+            try: CPELoader(self.app_root).require_in_game_update()
+            except PermissionError as exc: raise OGRecoveryError(str(exc)) from exc
         if plan.mode == "installer":
             subprocess.Popen(["msiexec.exe", "/i", plan.launcher], cwd=plan.stage_dir)
             return

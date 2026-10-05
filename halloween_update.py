@@ -163,6 +163,12 @@ def _halloween_loading_screen(app: Any) -> bool:
         app.screen.blit(line, line.get_rect(center=(WIDTH // 2, 531)))
         source = app.tiny.render(TRACK_PAGE, True, (167, 144, 206))
         app.screen.blit(source, source.get_rect(center=(WIDTH // 2, 610)))
+        if getattr(app, 'cpeloader_changes', []):
+            warning = app.tiny.render('WARNING: Modified game files detected after unlocking CPELoader.', True, RED)
+            app.screen.blit(warning, warning.get_rect(center=(WIDTH // 2, HEIGHT - 22)))
+        elif getattr(app, 'cpeloader', None) and app.cpeloader.unlocked:
+            warning = app.tiny.render('CPELoader unlocked — updates require the external installer.', True, ORANGE)
+            app.screen.blit(warning, warning.get_rect(center=(WIDTH // 2, HEIGHT - 22)))
         pygame.display.flip()
         app.clock.tick(FPS)
 

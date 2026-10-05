@@ -1,7 +1,7 @@
 """Cube Physics Engine (CPE) public API."""
 
 from .client import BridgeClient, BridgeError
-from .engine import CubePhysicsEngine
+from .backend import CubePhysicsEngine, physics_backend
 from .particles import IntegratedParticleEngine, Particle
 from .protocol import NumericCommand, ProtocolError, compile_command, parse_numeric_line
 from .runtime import CPEBridgeRuntime

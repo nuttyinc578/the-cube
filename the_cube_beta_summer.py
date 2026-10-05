@@ -1180,10 +1180,17 @@ from halloween_update import install_halloween_update
 install_experience_ui(GameApp, Button)
 install_error_update(GameApp, Button)
 install_halloween_update(GameApp, Button)
+from cpeloader_ui import install_cpeloader_ui, LoaderReset
+install_cpeloader_ui(GameApp)
 
 
 def main() -> None:
-    GameApp().run()
+    while True:
+        try:
+            GameApp().run()
+            return
+        except LoaderReset:
+            pygame.quit()
 
 
 if __name__ == "__main__":

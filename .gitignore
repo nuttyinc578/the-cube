@@ -230,3 +230,5 @@ error_update_state.json
 halloween_update_state.json
 og-current-version.json
 og-recovery/
+cpeloader_state.json
+cpeloader_manifest.json

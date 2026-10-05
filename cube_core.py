@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import pymunk
+from cpe import physics_backend as pymunk
 
 from cpe import CPEBridgeRuntime, CubePhysicsEngine, NumericCommand
 

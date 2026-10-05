@@ -1,10 +1,13 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^\d+\.\d+\.\d+$')]
-    [string]$Version = '6.4.0'
+    [string]$Version = '6.4.0',
+    [switch]$SkipGameBuild,
+    [switch]$PackageOnly
 )
 
 $ErrorActionPreference = 'Stop'
+if ($PackageOnly) { $SkipGameBuild = $true }
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 Set-Location -LiteralPath $repoRoot
 
@@ -71,15 +74,21 @@ $installerOutputPath = Join-Path $repoRoot 'installer-output'
 $stagingPath = Join-Path $repoRoot 'package-staging'
 $releasePath = Join-Path $repoRoot 'release-download'
 
-Remove-SafeChild $distPath
+if (-not $SkipGameBuild) { Remove-SafeChild $distPath }
 Remove-SafeChild $installerOutputPath
-Remove-SafeChild $stagingPath
+if (-not $PackageOnly) { Remove-SafeChild $stagingPath }
 Remove-SafeChild $releasePath
 New-Item -ItemType Directory -Path $distPath, $installerOutputPath, $stagingPath, $releasePath -Force | Out-Null
 
-& (Join-Path $PSScriptRoot 'Get-FallMusic.ps1')
-Invoke-Checked -Program 'python' -Arguments @('-m', 'PyInstaller', '--noconfirm', '--clean', 'summer_build.spec')
+if (-not $SkipGameBuild) {
+    & (Join-Path $PSScriptRoot 'Get-FallMusic.ps1')
+    Invoke-Checked -Program 'python' -Arguments @('-m', 'PyInstaller', '--noconfirm', '--clean', 'summer_build.spec')
+} elseif (-not (Test-Path -LiteralPath (Join-Path $distPath 'The Cube Beta Halloween Update.exe'))) {
+    throw 'SkipGameBuild requires an existing freshly built game executable.'
+}
 
+$authOutput = Join-Path $stagingPath 'nuttymod_auth.exe'
+if (-not $PackageOnly) {
 Push-Location -LiteralPath (Join-Path $repoRoot 'cpe\go-cache')
 try {
     Invoke-Checked -Program 'go' -Arguments @('test', './...')
@@ -99,15 +108,29 @@ $javaOut = Join-Path $distPath 'cpe\java-client\out'
 New-Item -ItemType Directory -Path $javaOut -Force | Out-Null
 Invoke-Checked -Program 'javac' -Arguments @('-encoding', 'UTF-8', '-d', $javaOut, 'cpe\java-client\src\main\java\com\nuttyinc\cpe\CpeClient.java')
 
-$authOutput = Join-Path $stagingPath 'nuttymod_auth.exe'
-Invoke-Checked -Program 'go' -Arguments @('build', '-trimpath', '-o', $authOutput, 'addons\nuttymod_bootstrap\nuttymod_auth.go')
+Invoke-Checked -Program 'go' -Arguments @('build', '-trimpath', '-o', $authOutput, 'addons\nuttymod\nuttymod_bootstrap\nuttymod_auth.go')
+} elseif (-not (Test-Path -LiteralPath $authOutput)) {
+    throw 'PackageOnly requires the staged helpers from a successful full release build.'
+}
 
 Copy-Item -LiteralPath 'README.md' -Destination (Join-Path $distPath 'README.md') -Force
+Copy-Item -LiteralPath 'cpeloader.py', 'cpeloader_core_runtime.js', 'cpeloader_core.rb', 'LICENCE.txt', 'THIRD_PARTY_NOTICES.txt' -Destination $distPath -Force
 Copy-Item -LiteralPath 'Run The Cube Beta CPE.cmd', 'Run CPE Aspire.cmd', 'Run CPE Java Client.cmd' -Destination $distPath -Force
 Copy-FilteredTree (Join-Path $repoRoot 'addons') (Join-Path $distPath 'addons')
 Copy-FilteredTree (Join-Path $repoRoot 'themes') (Join-Path $distPath 'themes')
-Copy-Item -LiteralPath $authOutput -Destination (Join-Path $distPath 'addons\nuttymod_bootstrap\nuttymod_auth.exe') -Force
+Copy-Item -LiteralPath $authOutput -Destination (Join-Path $distPath 'addons\nuttymod\nuttymod_bootstrap\nuttymod_auth.exe') -Force
 Copy-FilteredTree (Join-Path $repoRoot 'cpe') (Join-Path $distPath 'cpe')
+if (Test-Path -LiteralPath (Join-Path $repoRoot 'cpe-backend.json')) {
+    Copy-Item -LiteralPath (Join-Path $repoRoot 'cpe-backend.json') -Destination $distPath -Force
+}
+if (Test-Path -LiteralPath (Join-Path $repoRoot 'cpe_rephysics')) {
+    Copy-FilteredTree (Join-Path $repoRoot 'cpe_rephysics') (Join-Path $distPath 'cpe_rephysics')
+}
+
+if (Test-Path -LiteralPath (Join-Path $distPath 'cpeloader_state.json')) {
+    throw 'The distribution contains runtime unlock state. Build a clean distribution before packaging.'
+}
+Invoke-Checked -Program 'python' -Arguments @('cpeloader.py', '--root', $distPath, '--seal')
 
 $isccCandidates = @(
     $env:ISCC_PATH,
@@ -122,6 +145,7 @@ Invoke-Checked -Program $iscc -Arguments @('installer\TheCubeBetaFall.iss')
 
 $portableName = "The-Cube-Beta-Halloween-Update-$Version-Portable"
 $portablePath = Join-Path $stagingPath $portableName
+Remove-SafeChild $portablePath
 New-Item -ItemType Directory -Path $portablePath -Force | Out-Null
 Copy-Item -Path (Join-Path $distPath '*') -Destination $portablePath -Recurse -Force
 Copy-Item -LiteralPath 'LICENCE.txt', 'THIRD_PARTY_NOTICES.txt' -Destination $portablePath -Force

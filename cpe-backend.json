@@ -1,0 +1,13 @@
+{
+  "backend": "rephysics",
+  "version": "0.1.0",
+  "backup": "backup\\rephysics\\20261005T011722510902Z",
+  "sha256": {
+    "engine.py": "6543d3c88b52b4811c4479868344c301c5e2806f781cf7f7c350a9ed84529786",
+    "flash.py": "3451a19d6f5fdf6c51710a89acf7e448719043d1533ba15c76bec0c982bdff02",
+    "particles.py": "eb11d818944374b2713db555232005da31b26e9537a767d3a8d94bae70971bcb",
+    "physics.py": "ba383a06629aa7a9cbff4e1f8c10d24011fbe313e60b169e52b94775b7abdf1d",
+    "protocol.py": "0e27cfa0c4938d4a05e0e80d0a2c6db6fcfdd3c54c109bf690b90c0430f90c28",
+    "__init__.py": "839a6a69f21116afdaf85e4aa8a2b7f69ebaacd5df9db1da98bf100c461a17e1"
+  }
+}

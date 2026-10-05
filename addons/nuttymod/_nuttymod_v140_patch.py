@@ -27,6 +27,7 @@ PROFILE_JAR_NAME = "nuttymod_root_mode_profile.jar"
 SERVICE_NAME = "nuttymod_service.py"
 CONNECTION_MODULE_NAME = "_nuttymod_connection.py"
 CONNECTION_SECONDS = 120.0
+ISOLATED_MODE = True
 
 PERMANENT_INSTALL_SECONDS = 60.0
 SUPPORTED_PERMANENT_VERSIONS = {"1.3.0", "1.4.0", "1.4.1", PATCH_VERSION}
@@ -219,6 +220,15 @@ def _ensure_profile_assets(directory: Path | None = None) -> None:
 
 def _ensure_game_sidecars() -> None:
     loader_root = _loader_dir()
+    if ISOLATED_MODE:
+        missing = [
+            name
+            for name in (SERVICE_NAME, PATCH_JAR_NAME, PROFILE_JAR_NAME)
+            if not (loader_root / name).is_file()
+        ]
+        if missing:
+            raise ValueError(f"NuttyMod isolated files are missing: {', '.join(missing)}")
+        return
     game_root = Path(_RUNTIME["ADDONS_DIR"]).resolve().parent
     for name in (SERVICE_NAME, PATCH_JAR_NAME, PROFILE_JAR_NAME):
         source = loader_root / name
@@ -421,7 +431,7 @@ def _connection_screen(app: Any, duration: float = CONNECTION_SECONDS) -> bool:
     yellow = _RUNTIME["_color"]("YELLOW", (255, 225, 105))
     fps = int(getattr(_RUNTIME.get("_GAME_MODULE"), "FPS", 60))
     session = _connection_runtime().ConnectionSession(
-        Path(_RUNTIME["ADDONS_DIR"]),
+        _loader_dir(),
         duration=max(0.2, float(duration)),
     )
     session.start()
@@ -918,6 +928,11 @@ def install_permanent(
     *,
     _migrating: bool = False,
 ) -> tuple[bool, str]:
+    if ISOLATED_MODE:
+        return False, (
+            "Permanent Install is disabled while NuttyMod is isolated. "
+            "Run it only from addons/nuttymod; the main game files will not be rewritten."
+        )
     update_active_loader_state = addons_dir is None
     root = _default_source_root() if source_root is None else Path(source_root).resolve()
     add_root = (

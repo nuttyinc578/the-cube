@@ -13,7 +13,23 @@
 
 The Cube Beta is an interactive physics sandbox powered by the Cube Physics Engine (CPE) and Integrated Particle Engine (IPE). Version 6.4.0 adds an animated Halloween world and a mysterious **SECURITY ???** door. It opens the full-screen Broken Lands terminal: log in to the abandoned computer, run `OG.exe -list`, and recover a supported historical version with `OG.exe -6.3.0`, `OG.exe -6.2.2`, or `OG.exe -5.1`.
 
+## CPELoader
+
+CPELoader starts locked and blocks engine flashing. Press **Ctrl+A** in the game
+to open its warning screen; **Y** unlocks the Python, Node.js, and Ruby components
+and resets the game. **Shift+N** cancels. Unlocked loading pauses at **50%** until
+you press **Enter**. Changed managed files trigger a warning along the bottom.
+In-game version updates are blocked while unlocked; update using the external
+installer, which relocks the loader. Runtime settings, caches, backups, and
+installer uninstall metadata are excluded from integrity comparisons.
+
+This is an application-level lock, not an OS security boundary. Anyone who can
+edit the loader code or state can bypass it. The verified developer shortcut in
+the theme store is now **Ctrl+Shift+D** so it does not conflict with Ctrl+A.
+
 OG recovery is deliberately backup-first. Portable releases download into staging, ZIP paths are checked, SHA-256 file manifests are written, and a full restore point is created under `backup/og` before replacement is offered. The old 6.2.1 nightly is shown as unavailable because its GitHub Actions artifact expired.
+
+NuttyMod is isolated under `addons/nuttymod` and is not scanned during a normal launch. Its Permanent Install rewrite is disabled, while the Halloween security door remains built directly into the main game.
 
 ## Download
 
@@ -40,7 +56,7 @@ python the_cube_beta_summer.py
 Run the automated tests with:
 
 ```powershell
-python -m unittest test_halloween_music test_og_recovery test_error_update test_summer_game test_theme_system test_legacy_versions cpe.tests.test_cpe cpe.tests.test_full_stack -v
+python -m unittest test_halloween_music test_og_recovery test_nuttymod_isolation test_error_update test_summer_game test_theme_system test_legacy_versions cpe.tests.test_cpe cpe.tests.test_full_stack -v
 ```
 
 Build the complete Windows downloads with Inno Setup 6 installed. The build downloads the verified Pixabay music from its immutable archived source commit and checks its SHA-256 hash:
@@ -61,7 +77,7 @@ Build the complete Windows downloads with Inno Setup 6 installed. The build down
 
 ## Developer and OG modes
 
-Click **Verify & Reload** successfully three times, then press **Ctrl+A** within 45 seconds. Developer Mode includes an **OG / Legacy Versions** menu that loads the actual releases from [`nuttyinc578/the-cube`](https://github.com/nuttyinc578/the-cube/releases). It downloads the real historical EXE, MSI/CAB, Python, ZIP, or source assets into `legacy-versions/<tag>`, records their SHA-256 hashes, creates a backup, and launches the selected installer or application. The Christmas 5.1 release is included. Version 5.0 and earlier remain unsupported and show an extra warning.
+Click **Verify & Reload** successfully three times, then press **Ctrl+Shift+D** within 45 seconds. Developer Mode includes an **OG / Legacy Versions** menu that loads the actual releases from [`nuttyinc578/the-cube`](https://github.com/nuttyinc578/the-cube/releases). It downloads the real historical EXE, MSI/CAB, Python, ZIP, or source assets into `legacy-versions/<tag>`, records their SHA-256 hashes, creates a backup, and launches the selected installer or application. The Christmas 5.1 release is included. Version 5.0 and earlier remain unsupported and show an extra warning.
 
 ## Add-ons
 

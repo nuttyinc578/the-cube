@@ -483,6 +483,9 @@ class ThemeStore:
         return backup
 
     def activate_experience(self, experience: str) -> Path:
+        from cpeloader import CPELoader
+        try: CPELoader(self.app_root).require_in_game_update()
+        except PermissionError as exc: raise ThemeError(str(exc)) from exc
         if experience not in {"stable", "developer-beta", "experimental-beta"}:
             raise ThemeError("Unknown experience channel")
         backup = self.create_backup(f"experience-{experience}")
@@ -500,6 +503,9 @@ class ThemeStore:
         return backup
 
     def activate_legacy(self, profile_id: str) -> Path:
+        from cpeloader import CPELoader
+        try: CPELoader(self.app_root).require_in_game_update()
+        except PermissionError as exc: raise ThemeError(str(exc)) from exc
         profiles = {profile["id"]: profile for profile in LEGACY_PROFILES}
         if profile_id not in profiles:
             raise ThemeError("Unknown legacy compatibility profile")

@@ -51,6 +51,7 @@ Name: "addonsshortcut"; Description: "Add an Add-ons Folder shortcut to the Star
 [Dirs]
 Name: "{app}\addons"
 Name: "{app}\addons\mods"
+Name: "{app}\addons\nuttymod"
 Name: "{app}\themes\inbox"
 Name: "{app}\backup\themes"
 Name: "{app}\legacy-versions"
@@ -63,6 +64,12 @@ Source: "..\dist\The Cube Beta Halloween Update.exe"; DestDir: "{app}"; Flags: i
 Source: "..\LICENCE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\THIRD_PARTY_NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "..\dist\cpe-backend.json"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\dist\cpe_rephysics\*"; DestDir: "{app}\cpe_rephysics"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\dist\cpeloader.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\cpeloader_core_runtime.js"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\cpeloader_core.rb"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\cpeloader_manifest.json"; DestDir: "{app}"; Flags: ignoreversion
 
 ; CPE launchers
 Source: "..\dist\Run The Cube Beta CPE.cmd"; DestDir: "{app}"; Flags: ignoreversion
@@ -77,27 +84,37 @@ Source: "..\dist\addons\*.bat"; DestDir: "{app}\addons"; Flags: ignoreversion
 Source: "..\dist\addons\*.batch"; DestDir: "{app}\addons"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "..\dist\addons\*.cs"; DestDir: "{app}\addons"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "..\dist\addons\*.c#"; DestDir: "{app}\addons"; Flags: ignoreversion
-Source: "..\dist\addons\*.jar"; DestDir: "{app}\addons"; Flags: ignoreversion
+Source: "..\dist\addons\*.jar"; DestDir: "{app}\addons"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "..\dist\addons\README.md"; DestDir: "{app}\addons"; Flags: ignoreversion
-Source: "..\dist\addons\NUTTYMOD_README.md"; DestDir: "{app}\addons"; Flags: ignoreversion
-Source: "..\dist\addons\nuttymod_update_config.json"; DestDir: "{app}\addons"; Flags: ignoreversion
 Source: "..\dist\addons\mods\*"; DestDir: "{app}\addons\mods"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\dist\addons\nuttymod_bootstrap\nuttymod_*"; DestDir: "{app}\addons\nuttymod_bootstrap"; Flags: ignoreversion
-Source: "..\dist\addons\nuttymod_bootstrap\package.json"; DestDir: "{app}\addons\nuttymod_bootstrap"; Flags: ignoreversion
+; NuttyMod is deliberately isolated so the normal add-on scan cannot execute it.
+Source: "..\dist\addons\nuttymod\*"; DestDir: "{app}\addons\nuttymod"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Verified Theme Store. Runtime inbox and backups start empty.
 Source: "..\dist\themes\*"; DestDir: "{app}\themes"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; CPE bridge, Go cache, Java client, and Aspire host
-Source: "..\dist\cpe\README.md"; DestDir: "{app}\cpe"; Flags: ignoreversion
-Source: "..\dist\cpe\node-bridge\*"; DestDir: "{app}\cpe\node-bridge"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\dist\cpe\go-cache\*.go"; DestDir: "{app}\cpe\go-cache"; Flags: ignoreversion
-Source: "..\dist\cpe\go-cache\*.mod"; DestDir: "{app}\cpe\go-cache"; Flags: ignoreversion
-Source: "..\dist\cpe\go-cache\bin\cpe-go-cache.exe"; DestDir: "{app}\cpe\go-cache\bin"; Flags: ignoreversion
-Source: "..\dist\cpe\java-client\*"; DestDir: "{app}\cpe\java-client"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\dist\cpe\CPE.AppHost\CPE.AppHost.csproj"; DestDir: "{app}\cpe\CPE.AppHost"; Flags: ignoreversion
-Source: "..\dist\cpe\CPE.AppHost\Program.cs"; DestDir: "{app}\cpe\CPE.AppHost"; Flags: ignoreversion
-Source: "..\dist\cpe\CPE.AppHost\Properties\launchSettings.json"; DestDir: "{app}\cpe\CPE.AppHost\Properties"; Flags: ignoreversion
+Source: "..\dist\cpe\*"; DestDir: "{app}\cpe"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[InstallDelete]
+; Installer updates restore the default loader lock and replace the trusted baseline.
+Type: files; Name: "{app}\cpeloader_state.json"
+; Remove NuttyMod's old auto-scanned layout during upgrade.
+Type: files; Name: "{app}\addons\_nuttymod_connection.py"
+Type: files; Name: "{app}\addons\_nuttymod_v140_patch.py"
+Type: files; Name: "{app}\addons\nuttymod_loader.py"
+Type: files; Name: "{app}\addons\nuttymod_loader.rb"
+Type: files; Name: "{app}\addons\nuttymod_service.py"
+Type: files; Name: "{app}\addons\nuttymod_loader_patch.jar"
+Type: files; Name: "{app}\addons\nuttymod_root_mode_profile.jar"
+Type: files; Name: "{app}\addons\nuttymod_update_config.json"
+Type: files; Name: "{app}\addons\nuttymod_runtime_v122.pyc"
+Type: filesandordirs; Name: "{app}\addons\nuttymod_bootstrap"
+Type: files; Name: "{app}\nuttymod_core.py"
+Type: files; Name: "{app}\nuttymod_cube_core.py"
+Type: files; Name: "{app}\nuttymod_service.py"
+Type: files; Name: "{app}\nuttymod_loader_patch.jar"
+Type: files; Name: "{app}\nuttymod_root_mode_profile.jar"
 
 [Icons]
 Name: "{group}\The Cube Beta Halloween Update"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"

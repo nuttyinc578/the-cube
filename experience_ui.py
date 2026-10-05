@@ -303,7 +303,9 @@ def _theme_store_menu(app: Any) -> None:
                 if event.key == pygame.K_ESCAPE:
                     return
                 ctrl = bool(event.mod & pygame.KMOD_CTRL)
-                if app.developer_gate.accept_hotkey(ctrl, pygame.key.name(event.key)):
+                # Ctrl+A is now reserved for CPELoader. Retain the verified developer gate.
+                dev_key = ctrl and bool(event.mod & pygame.KMOD_SHIFT) and event.key == pygame.K_d
+                if dev_key and app.developer_gate.accept_hotkey(True, 'a'):
                     _developer_install_menu(app)
             elif event.type == pygame.DROPFILE:
                 path = Path(event.file).resolve()
@@ -346,7 +348,7 @@ def _theme_store_menu(app: Any) -> None:
         _draw_lines(app, THEME_DISCLAIMER, pygame.Rect(140, 382, 820, 70), INK, app.tiny)
 
         remaining = max(0, 3 - app.developer_gate.clicks)
-        gate = "Ctrl+A unlocked for 45 seconds" if app.developer_gate.armed else f"Developer unlock: {remaining} verified reloads remaining"
+        gate = "Ctrl+Shift+D unlocked for 45 seconds; Ctrl+A opens CPELoader" if app.developer_gate.armed else f"Developer unlock: {remaining} verified reloads remaining"
         gate_label = app.tiny.render(gate, True, MUTED)
         app.screen.blit(gate_label, gate_label.get_rect(center=(WIDTH // 2, 479)))
 
@@ -371,7 +373,7 @@ def _theme_store_menu(app: Any) -> None:
                     app.theme_status = f"Reloaded store: {sum(r.verified for r in records)} themes verified."
                 remaining = app.developer_gate.record_verification()
                 if remaining == 0:
-                    app.theme_status += " Press Ctrl+A within 45 seconds for Developer Mode."
+                    app.theme_status += " Press Ctrl+Shift+D within 45 seconds for Developer Mode."
             except ThemeError as exc:
                 app.theme_status = f"Verification failed: {exc}"
         elif selected in {1, 2} and not pair_ready:
