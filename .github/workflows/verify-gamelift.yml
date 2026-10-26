@@ -1,0 +1,66 @@
+name: Verify GameLift server
+
+on:
+  push:
+    branches: [main, codex/gamelift-startup-diagnostics]
+    paths:
+      - '.github/workflows/verify-gamelift.yml'
+      - 'dedicated_server/**'
+      - 'multiplayer_backend/**'
+      - 'cube_launcher/**'
+      - 'cube_core.py'
+      - 'gamelift_*.py'
+      - 'test_gamelift.py'
+      - 'test_dedicated_server.py'
+      - 'test_cube_launcher.py'
+      - 'tools/Verify-DedicatedServer.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gamelift-verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  local-server:
+    name: Local server (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            binary: cube-server
+          - os: windows-latest
+            binary: cube-server.exe
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '0'
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.26.x'
+          cache: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install physics dependencies only
+        run: python -m pip install --disable-pip-version-check -r dedicated_server/requirements.txt
+      - name: Test managed lifecycle with a mocked SDK (no AWS calls)
+        working-directory: dedicated_server
+        run: go test -count=1 -timeout=120s -v ./...
+      - name: Test Python regressions
+        run: python -m unittest test_dedicated_server test_gamelift test_cube_launcher -v
+      - name: Compile the dedicated host
+        working-directory: dedicated_server
+        run: go build -trimpath -o ${{ matrix.binary }} .
+      - name: Verify two local TLS players with the real CPE worker
+        run: python tools/Verify-DedicatedServer.py
