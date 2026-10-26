@@ -783,7 +783,7 @@ class NetworkPeer:
         self.role = role
         self.host = host
         self.port = port
-        self.inbox: queue.Queue[dict[str, Any]] = queue.Queue()
+        self.inbox: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=128)
         self.connected = False
         self.status = "Startingâ€¦"
         self.error = ""
@@ -795,6 +795,10 @@ class NetworkPeer:
 
     def start(self) -> None:
         self._thread.start()
+
+    def _connect_client(self):
+        connection = socket.create_connection((self.host, self.port), timeout=6)
+        return connection
 
     def _run(self) -> None:
         try:
@@ -814,9 +818,7 @@ class NetworkPeer:
                         continue
             else:
                 self.status = f"Connecting to {self.host}:{self.port}"
-                self._conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self._conn.settimeout(6)
-                self._conn.connect((self.host, self.port))
+                self._conn = self._connect_client()
                 self.status = "Connected to host"
             if not self._conn:
                 return
@@ -829,12 +831,14 @@ class NetworkPeer:
                     if not chunk:
                         raise ConnectionError("The other player left")
                     buffer += chunk
+                    if len(buffer) > 1024 * 1024:
+                        raise ConnectionError('Network frame limit exceeded')
                     while b"\n" in buffer:
                         raw, buffer = buffer.split(b"\n", 1)
                         if raw:
                             message = json.loads(raw.decode("utf-8"))
                             if isinstance(message, dict):
-                                self.inbox.put(message)
+                                self.inbox.put_nowait(message)
                 except socket.timeout:
                     continue
         except Exception as exc:
@@ -843,6 +847,7 @@ class NetworkPeer:
                 self.status = f"Connection ended: {exc}"
         finally:
             self.connected = False
+            self.close()
 
     def send(self, message: dict[str, Any]) -> None:
         if not self.connected or not self._conn:

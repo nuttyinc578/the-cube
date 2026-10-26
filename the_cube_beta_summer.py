@@ -716,9 +716,10 @@ class GameApp:
 
     def multiplayer_menu(self) -> str:
         buttons = [
-            Button((375, 292, 350, 58), "HOST A LAN GAME", YELLOW),
-            Button((375, 365, 350, 58), "JOIN A LAN GAME", MINT),
-            Button((375, 450, 350, 52), "BACK", WHITE),
+            Button((375, 255, 350, 58), "AMAZON GAMELIFT ONLINE", YELLOW),
+            Button((375, 325, 350, 58), "HOST A LAN GAME", YELLOW),
+            Button((375, 395, 350, 58), "JOIN A LAN GAME", MINT),
+            Button((375, 470, 350, 52), "BACK", WHITE),
         ]
         while True:
             ticks = pygame.time.get_ticks() / 1000
@@ -730,30 +731,34 @@ class GameApp:
                     return "menu"
             self.draw_background(ticks)
             self.title_block(
-                "Two-player LAN",
+                "Online or local multiplayer",
                 "Share the Sandbox",
                 "Host and guest can spawn, grab, throw, burst, and trigger events together.",
                 82,
             )
-            self.draw_panel(pygame.Rect(325, 252, 450, 285))
+            self.draw_panel(pygame.Rect(325, 240, 450, 315))
             selected = self.wait_click(buttons, events)
-            hint = self.small.render("Both computers must be on the same local network.", True, NAVY)
-            self.screen.blit(hint, hint.get_rect(center=(WIDTH // 2, 530)))
+            hint = self.small.render("GameLift needs cloud setup. LAN works on your local network.", True, NAVY)
+            self.screen.blit(hint, hint.get_rect(center=(WIDTH // 2, 580)))
             pygame.display.flip()
             self.clock.tick(FPS)
             if selected == 0:
+                from gamelift_ui import play_gamelift
+                play_gamelift(self)
+                return "multiplayer"
+            if selected == 1:
                 peer = NetworkPeer("host")
                 peer.start()
                 self.run_simulation(peer, is_host=True)
                 return "multiplayer"
-            if selected == 1:
+            if selected == 2:
                 address = self.join_address_menu()
                 if address:
                     peer = NetworkPeer("client", address[0], address[1])
                     peer.start()
                     self.run_simulation(peer, is_host=False)
                 return "multiplayer"
-            if selected == 2:
+            if selected == 3:
                 return "menu"
 
     def join_address_menu(self) -> tuple[str, int] | None:
