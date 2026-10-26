@@ -2,6 +2,7 @@
 import json
 import hashlib
 import os
+import shutil
 import socket
 import ssl
 import subprocess
@@ -16,7 +17,13 @@ def main():
     folder = ROOT/'build'/'dedicated-tls-qa'
     folder.mkdir(parents=True, exist_ok=True)
     certificate, key = folder/'localhost.crt', folder/'localhost.key'
-    openssl = 'C:/Program Files/Git/usr/bin/openssl.exe'
+    openssl = shutil.which('openssl')
+    if not openssl:
+        git_openssl = Path('C:/Program Files/Git/usr/bin/openssl.exe')
+        openssl = str(git_openssl) if git_openssl.is_file() else None
+    if not openssl:
+        raise RuntimeError('OpenSSL is required for the local TLS verification fixture.')
+    binary = ROOT/'dedicated_server'/('cube-server.exe' if os.name == 'nt' else 'cube-server')
     subprocess.run([openssl, 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1',
         '-subj', '/CN=localhost', '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1',
         '-keyout', str(key), '-out', str(certificate)], check=True, capture_output=True)
@@ -24,7 +31,7 @@ def main():
         probe.bind(('127.0.0.1', 0))
         port = probe.getsockname()[1]
     with (folder/'server.log').open('w', encoding='utf-8') as logfile:
-        process = subprocess.Popen([str(ROOT/'dedicated_server'/'cube-server.exe'), '--local', '--port', str(port),
+        process = subprocess.Popen([str(binary), '--local', '--port', str(port),
             '--python', sys.executable, '--worker', str(ROOT/'dedicated_server'/'worker.py'), '--cert', str(certificate),
             '--key', str(key), '--log-file', str(folder/'startup.log')], cwd=ROOT, stdout=logfile, stderr=logfile,
             creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
@@ -60,7 +67,7 @@ def main():
             assert snapshots[0]['entities'][0]['id'] == snapshots[1]['entities'][0]['id']
             assert str(snapshots[0]['entities'][0]['owner']).startswith('guest-')
             (folder/'success.json').write_text(json.dumps({'two_tls_players': True,
-                'server_sha256': hashlib.sha256((ROOT/'dedicated_server'/'cube-server.exe').read_bytes()).hexdigest()}), encoding='utf-8')
+                'server_sha256': hashlib.sha256(binary.read_bytes()).hexdigest()}), encoding='utf-8')
             print('PASS: two certificate-verified TLS clients received authoritative CPE snapshots.')
         finally:
             for reader in readers:
