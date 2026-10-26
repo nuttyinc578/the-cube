@@ -96,9 +96,18 @@ def verify_install():
                        timeout=120, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
         if loader.changes():
             raise RuntimeError('Smoke verification altered the installed game.')
-        shortcut = Path(os.environ['APPDATA'])/'Microsoft'/'Windows'/'Start Menu'/'Programs'/group/'The Cube Beta 6.4.1.lnk'
-        if not shortcut.is_file() or not uninstall.is_file():
+        # Elevated CI images can redirect the Windows Programs known folder;
+        # verify the actual generated shortcut, not an assumed APPDATA mapping.
+        shortcut_candidates = []
+        for base in (Path(os.environ['APPDATA']), Path(os.environ['PROGRAMDATA'])):
+            programs = base/'Microsoft'/'Windows'/'Start Menu'/'Programs'
+            shortcut_candidates.extend(programs.rglob('The Cube Beta 6.4.1.lnk'))
+        if len(shortcut_candidates) != 1 or not uninstall.is_file():
+            print('Shortcut candidates:', [str(path) for path in shortcut_candidates], flush=True)
+            print('Uninstaller present:', uninstall.is_file(), flush=True)
+            print((work/'install.log').read_text(encoding='utf-8', errors='replace')[-12000:], flush=True)
             raise RuntimeError('Missing Start Menu shortcut or uninstaller.')
+        shortcut = shortcut_candidates[0]
         user_file = installed/'backup'/'player-save.txt'
         user_file.parent.mkdir(exist_ok=True)
         user_file.write_text('Preserve this player-created backup.', encoding='utf-8')
