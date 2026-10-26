@@ -48,7 +48,9 @@ class GameLiftPeer(NetworkPeer):
     def _connect_client(self):
         raw = socket.create_connection((self.host, self.port), timeout=8)
         try:
-            connection = ssl.create_default_context().wrap_socket(raw, server_hostname=self.host)
+            context = ssl.create_default_context()
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+            connection = context.wrap_socket(raw, server_hostname=self.host)
             connection.sendall((json.dumps({'type': 'join', 'protocol': 'cube-json-tls-v1',
                 'player_session_id': self.reservation['player_session_id']})+'\n').encode())
             return connection

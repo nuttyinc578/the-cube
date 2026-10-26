@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/release-6.4.1.yml'
       - 'cube_core.py'
+      - 'gamelift_*.py'
       - 'the_cube_beta_summer.py'
       - 'summer_version.txt'
       - 'tools/Package-BaseHalloween.py'
@@ -77,7 +78,7 @@ jobs:
           $existingDraft = gh release view 6.4.1 --repo $env:GITHUB_REPOSITORY --json isDraft --jq .isDraft 2>$null
           if ($LASTEXITCODE -eq 0) {
             if ($existingDraft -ne 'true') { throw '6.4.1 is already public; refusing to overwrite it.' }
-            gh release edit 6.4.1 --repo $env:GITHUB_REPOSITORY --notes-file RELEASE_NOTES_6.4.1.md
+            gh release edit 6.4.1 --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --notes-file RELEASE_NOTES_6.4.1.md
           } else {
             gh release create 6.4.1 --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --draft --title 'The Cube Beta Halloween Update 6.4.1' --notes-file RELEASE_NOTES_6.4.1.md
           }

@@ -39,6 +39,7 @@ def main():
         readers = []
         try:
             context = ssl.create_default_context(cafile=str(certificate))
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
             deadline = time.monotonic()+60
             while True:
                 try:
