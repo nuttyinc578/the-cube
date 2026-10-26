@@ -1,0 +1,101 @@
+name: Add tested 6.4.1 installer
+
+on:
+  push:
+    branches: [codex/gamelift-startup-diagnostics]
+    paths:
+      - '.github/workflows/installer-6.4.1.yml'
+      - 'installer/TheCubeBeta641.iss'
+      - 'installer/README_6.4.1.md'
+      - 'tools/Verify-Installer641.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cube-beta-installer-6.4.1
+  cancel-in-progress: true
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      checks: read
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYGAME_HIDE_SUPPORT_PROMPT: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Download the unchanged public 6.4.1 portable
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $release = gh release view 6.4.1 --repo $env:GITHUB_REPOSITORY --json isDraft,targetCommitish,assets | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($release.isDraft -or $release.targetCommitish -ne '8e8c82006c50c834c226da90ccc60436f5e6e198') { throw 'The published release source changed.' }
+          $portable = @($release.assets | Where-Object name -eq 'The-Cube-Beta-Halloween-6.4.1-Portable.zip')
+          if ($portable.Count -ne 1 -or $portable[0].digest -ne 'sha256:f8ae9222b0e0daaa25a914ad50a7c78b399cc702bf1de4f5035c5a27513cf8c7') { throw 'The published portable changed.' }
+          gh release download 6.4.1 --repo $env:GITHUB_REPOSITORY --pattern The-Cube-Beta-Halloween-6.4.1-Portable.zip --dir build/installer-6.4.1-download
+          exit $LASTEXITCODE
+      - name: Verify every payload hash before staging
+        run: python tools/Verify-Installer641.py prepare
+      - name: Install Inno Setup on the disposable build runner
+        run: choco install innosetup --no-progress --yes
+      - name: Compile the MIT-licensed per-user installer
+        shell: pwsh
+        run: |
+          $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path -LiteralPath $compiler)) { $compiler = 'C:\Program Files\Inno Setup 6\ISCC.exe' }
+          $payload = Join-Path $env:GITHUB_WORKSPACE 'build/installer-6.4.1-payload'
+          $output = Join-Path $env:GITHUB_WORKSPACE 'build/installer-6.4.1-output'
+          & $compiler "/DPayloadDir=$payload" "/DOutputDir=$output" installer/TheCubeBeta641.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $version = (Get-Item -LiteralPath (Join-Path $output 'The-Cube-Beta-Halloween-Update-6.4.1-Setup.exe')).VersionInfo.FileVersion
+          if ($version -ne '6.4.1.0') { throw "Unexpected installer version: $version" }
+      - name: Test consent, overwrite refusal, installed game and uninstall
+        run: python tools/Verify-Installer641.py test
+      - name: Require a successful CodeQL gate before public upload
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for ($attempt = 0; $attempt -lt 16; $attempt++) {
+            $checks = gh api "repos/$env:GITHUB_REPOSITORY/commits/$env:GITHUB_SHA/check-runs" | ConvertFrom-Json
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $gate = @($checks.check_runs | Where-Object name -eq 'CodeQL')
+            if (@($gate | Where-Object conclusion -eq 'failure').Count -gt 0) { throw 'CodeQL reported a security finding; refusing public upload.' }
+            if (@($gate | Where-Object conclusion -eq 'success').Count -gt 0) { exit 0 }
+            Start-Sleep -Seconds 15
+          }
+          throw 'CodeQL has not cleared this installer revision; refusing public upload.'
+      - name: Add installer and its checksum without replacing the portable ZIP
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $filename = 'The-Cube-Beta-Halloween-Update-6.4.1-Setup.exe'
+          $setup = Join-Path 'build/installer-6.4.1-output' $filename
+          $checksum = "$setup.sha256"
+          $digest = (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$digest  $filename" | Set-Content -LiteralPath $checksum -Encoding ascii
+          gh release upload 6.4.1 $setup $checksum --repo $env:GITHUB_REPOSITORY
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $release = gh release view 6.4.1 --repo $env:GITHUB_REPOSITORY --json body,assets | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $asset = @($release.assets | Where-Object name -eq $filename)
+          if ($asset.Count -ne 1 -or $asset[0].digest -ne "sha256:$digest") { throw 'Uploaded installer digest mismatch.' }
+          $section = "## Windows installer`n`n[Download the 6.4.1 installer](https://github.com/$env:GITHUB_REPOSITORY/releases/download/6.4.1/$filename). It uses the exact verified portable game files, asks you to accept the MIT License, and installs into a new empty folder. Existing installations and backups are not overwritten. The installer is unsigned; Windows may display a SmartScreen warning. Ruby add-ons still require Ruby separately.`n`nInstaller source: https://github.com/$env:GITHUB_REPOSITORY/commit/$env:GITHUB_SHA`n`n"
+          if (-not $release.body.Contains($filename)) {
+            gh release edit 6.4.1 --repo $env:GITHUB_REPOSITORY --notes ($section + $release.body)
+            exit $LASTEXITCODE
+          }
