@@ -1,5 +1,6 @@
 """Package the actual Halloween base game without adding CPE Flasher."""
 import argparse
+import re
 import shutil
 import sys
 import zipfile
@@ -13,7 +14,10 @@ from cpeloader import snapshot, write_json
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--build-dir', default='build/halloween-gamelift-game')
+    parser.add_argument('--version', help='Optional release version for the portable filename')
     args = parser.parse_args()
+    if args.version and not re.fullmatch(r'\d+\.\d+\.\d+', args.version):
+        raise ValueError('Release version must have three numeric components.')
     folder = (ROOT/args.build_dir).resolve()
     if ROOT not in folder.parents or not (folder/'The Cube Beta Halloween Update.exe').is_file():
         raise ValueError('A compiled base game in a repository build subdirectory is required.')
@@ -30,7 +34,8 @@ def main():
     write_json(folder/'cpeloader_state.json', {'unlocked': False, 'components': {
         'cpeloader.py': False, 'cpeloader_core_runtime.js': False, 'cpeloader_core.rb': False}})
     write_json(folder/'cpeloader_manifest.json', {'files': snapshot(folder)})
-    archive = folder.parent/'Cube-Beta-Halloween-GameLift-Prepared-Portable.zip'
+    archive = folder.parent/(f'The-Cube-Beta-Halloween-{args.version}-Portable.zip' if args.version
+        else 'Cube-Beta-Halloween-GameLift-Prepared-Portable.zip')
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as output:
         for path in sorted(folder.rglob('*')):
             if path.is_file():

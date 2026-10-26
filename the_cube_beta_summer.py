@@ -1,4 +1,4 @@
-"""The Cube Beta 6.4.0 - Halloween Update, powered by CPE and IPE."""
+"""The Cube Beta 6.4.1 - Halloween Update, powered by CPE and IPE."""
 
 from __future__ import annotations
 
@@ -1192,6 +1192,30 @@ install_cpeloader_ui(GameApp)
 
 
 def main() -> None:
+    if '--release-smoke-test' in sys.argv:
+        # Exercise the frozen game's actual imports, SDL, assets and physics
+        # without opening licence prompts, downloading music or writing settings.
+        from types import SimpleNamespace
+        from gamelift_ui import play_gamelift
+        world = None
+        try:
+            pygame.init()
+            pygame.display.set_mode((WIDTH, HEIGHT))
+            pygame.image.load(str(bundle_path('halloween_cube_icon.png')))
+            if not bundle_path('LICENCE.txt').is_file() or not callable(play_gamelift):
+                raise RuntimeError('Packaged game resources are incomplete')
+            world = PhysicsWorld(700, SimpleNamespace(shapes=[], events=[]))
+            world.spawn(250, 120, owner='release-smoke')
+            world.update(1/60, 0, 1)
+            if not world.snapshot():
+                raise RuntimeError('Packaged physics did not create an entity')
+        except Exception:
+            raise SystemExit(1)
+        finally:
+            if world is not None:
+                world.close()
+            pygame.quit()
+        return
     while True:
         try:
             GameApp().run()

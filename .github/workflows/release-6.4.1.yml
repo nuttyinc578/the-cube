@@ -1,0 +1,86 @@
+name: Prepare Cube Beta 6.4.1 release
+
+on:
+  push:
+    branches: [codex/gamelift-startup-diagnostics]
+    paths:
+      - '.github/workflows/release-6.4.1.yml'
+      - 'cube_core.py'
+      - 'the_cube_beta_summer.py'
+      - 'summer_version.txt'
+      - 'tools/Package-BaseHalloween.py'
+      - 'RELEASE_NOTES_6.4.1.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cube-beta-release-6.4.1
+  cancel-in-progress: true
+
+jobs:
+  portable:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYGAME_HIDE_SUPPORT_PROMPT: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1
+        with:
+          ruby-version: '3.3'
+      - name: Install build dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+      - name: Retrieve checksum-verified fallback music
+        shell: pwsh
+        run: ./tools/Get-FallMusic.ps1
+      - name: Test the base game and GameLift preparation
+        run: python -m unittest test_dedicated_server test_gamelift test_cube_launcher test_cpeloader test_halloween_music test_og_recovery test_nuttymod_isolation test_error_update test_summer_game test_theme_system test_legacy_versions cpe.tests.test_cpe -v
+      - name: Compile the base game (not CPE Flasher)
+        run: python -m PyInstaller --noconfirm --clean --distpath build/halloween-gamelift-game summer_build.spec
+      - name: Package portable version 6.4.1
+        shell: pwsh
+        run: |
+          Copy-Item -LiteralPath RELEASE_NOTES_6.4.1.md -Destination build/halloween-gamelift-game/RELEASE_NOTES_6.4.1.md
+          python tools/Package-BaseHalloween.py --version 6.4.1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $releaseVersion = (Get-Item -LiteralPath 'build/halloween-gamelift-game/The Cube Beta Halloween Update.exe').VersionInfo.ProductVersion
+          if ($releaseVersion -ne '6.4.1') { throw "Unexpected game version: $releaseVersion" }
+      - name: Smoke-test the packaged executable and integrity manifest
+        run: >-
+          python -c "import subprocess; from pathlib import Path; from cpeloader import CPELoader;
+          folder=Path('build/halloween-gamelift-game').resolve();
+          subprocess.run([str(folder/'The Cube Beta Halloween Update.exe'),'--release-smoke-test'],cwd=folder,timeout=120,check=True);
+          assert CPELoader(folder).changes()==[], 'The packaged files changed during smoke verification';
+          assert not (folder/'gamelift.json').exists(), 'No unverified live endpoint may be shipped'"
+      - name: Produce SHA-256 checksum
+        shell: pwsh
+        run: |
+          $archive = 'build/The-Cube-Beta-Halloween-6.4.1-Portable.zip'
+          $digest = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$digest  The-Cube-Beta-Halloween-6.4.1-Portable.zip" | Set-Content -LiteralPath build/SHA256SUMS.txt -Encoding ascii
+      - name: Upload tested files to a draft release only
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $existingDraft = gh release view 6.4.1 --repo $env:GITHUB_REPOSITORY --json isDraft --jq .isDraft 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            if ($existingDraft -ne 'true') { throw '6.4.1 is already public; refusing to overwrite it.' }
+            gh release edit 6.4.1 --repo $env:GITHUB_REPOSITORY --notes-file RELEASE_NOTES_6.4.1.md
+          } else {
+            gh release create 6.4.1 --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --draft --title 'The Cube Beta Halloween Update 6.4.1' --notes-file RELEASE_NOTES_6.4.1.md
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh release upload 6.4.1 build/The-Cube-Beta-Halloween-6.4.1-Portable.zip build/SHA256SUMS.txt --repo $env:GITHUB_REPOSITORY --clobber
+          exit $LASTEXITCODE
