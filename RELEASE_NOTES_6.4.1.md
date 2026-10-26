@@ -16,6 +16,7 @@ multiplayer remain available. Ruby add-ons need a separate Ruby installation.
 - Dedicated Go GameLift server with authoritative Python CPE physics.
 - Startup diagnostics, worker-exit handling, and safer server cleanup.
 - Bounded network input and Linux installation permission fixes.
+- Explicit TLS 1.2 minimum for GameLift transport and connection checks.
 - Linux/Windows server tests and real two-player local TLS verification.
 
 ## Important: online hosting is not live
