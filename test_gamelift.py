@@ -1,6 +1,7 @@
 import unittest
 import time
-from unittest.mock import Mock
+import ssl
+from unittest.mock import Mock, patch
 from gamelift_client import GameLiftPeer, validate_reservation
 from cube_core import NetworkPeer
 from multiplayer_backend.gamelift_reservations import Reservations
@@ -20,6 +21,18 @@ class GameLiftTests(unittest.TestCase):
     def test_roundtrip_reservation(self):
         value = self.reservation()
         self.assertEqual(validate_reservation(value), value)
+
+    def test_client_requires_tls12_and_preserves_hostname_verification(self):
+        peer = GameLiftPeer(self.reservation())
+        self.addCleanup(peer.close)
+        raw, context = Mock(), Mock()
+        with patch('gamelift_client.socket.create_connection', return_value=raw), \
+                patch('gamelift_client.ssl.create_default_context', return_value=context):
+            connection = peer._connect_client()
+        self.assertEqual(context.minimum_version, ssl.TLSVersion.TLSv1_2)
+        context.wrap_socket.assert_called_once_with(raw, server_hostname='test.example.com')
+        self.assertIs(connection, context.wrap_socket.return_value)
+        connection.sendall.assert_called_once()
 
     def test_lan_snapshot_still_roundtrips(self):
         host = NetworkPeer('host', port=0)
