@@ -60,7 +60,7 @@ jobs:
           $output = Join-Path $env:GITHUB_WORKSPACE 'build/installer-6.4.1-output'
           & $compiler "/DPayloadDir=$payload" "/DOutputDir=$output" installer/TheCubeBeta641.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $version = (Get-Item -LiteralPath (Join-Path $output 'The-Cube-Beta-Halloween-Update-6.4.1-Setup.exe')).VersionInfo.FileVersion
+          $version = (Get-Item -LiteralPath (Join-Path $output 'The-Cube-Beta-Halloween-Update-6.4.1-Setup.exe')).VersionInfo.FileVersion.Trim()
           if ($version -ne '6.4.1.0') { throw "Unexpected installer version: $version" }
       - name: Test consent, overwrite refusal, installed game and uninstall
         run: python tools/Verify-Installer641.py test
