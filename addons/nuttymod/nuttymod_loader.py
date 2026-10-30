@@ -19,7 +19,7 @@ _BOOTSTRAP_DIR = Path(__file__).resolve().parent
 _RUNTIME_FILE = _BOOTSTRAP_DIR / "nuttymod_runtime_v122.pyc"
 STABLE_LOADER_VERSION = "1.4.5"
 BETA_LOADER_VERSION = "1.5.0-beta"
-SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly")
+SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly", "6.4.2")
 CPELOADER_COMPONENTS = (
     "cpeloader.py",
     "cpeloader_core_runtime.js",
@@ -64,13 +64,13 @@ def _windows_executable_version(path: Path) -> str | None:
         minor = values[2] & 0xFFFF
         patch = values[3] >> 16
         version = f"{major}.{minor}.{patch}"
-        return "6.4.2-nightly" if version == "6.4.2" else version
+        return version + ("-nightly" if values[6] & values[7] & 0x2 else "")
     except (AttributeError, OSError, ValueError):
         return None
 
 
 def _game_version(root: Path) -> str:
-    core = root / "cube_core.py"
+    core = root / ("release_info.py" if (root/"release_info.py").is_file() else "cube_core.py")
     if core.is_file():
         try:
             source = core.read_text(encoding="utf-8-sig")
