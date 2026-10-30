@@ -39,6 +39,8 @@ def main():
             'test_dedicated_server', 'cpe.tests.test_cpe', '-v')
     run(sys.executable, '-m', 'PyInstaller', '--noconfirm', '--distpath', folder,
         '--workpath', ROOT/'build'/'nightly-pyinstaller', ROOT/'nightly_build.spec')
+    run(sys.executable, '-m', 'unittest',
+        'test_nuttymod_isolation.NuttyModIsolationTests.test_portable_build_reads_version_from_executable', '-v')
     shutil.copy2(ROOT/'NIGHTLY_6.4.2.md', folder/'NIGHTLY_6.4.2.md')
     licences = folder/'third-party-licenses'
     licences.mkdir()

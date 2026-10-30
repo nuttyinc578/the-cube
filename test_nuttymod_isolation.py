@@ -159,11 +159,17 @@ class NuttyModIsolationTests(unittest.TestCase):
         runtime = package / "nuttymod_runtime_v122.pyc"
         if runtime.read_bytes()[:4] == importlib.util.MAGIC_NUMBER:
             self.skipTest("Legacy visual runtime matches this interpreter")
+        candidates = ((ROOT/'build'/'nightly-game'/'The Cube Beta Nightly.exe', '6.4.2-nightly'),
+                      (ROOT/'dist'/'The Cube Beta Halloween Update.exe', '6.4.1'))
+        compiled = next(((path, version) for path, version in candidates if path.is_file()), None)
+        if compiled is None:
+            self.skipTest('Requires a compiled game; Build-Nightly reruns this after compilation')
+        executable, expected_version = compiled
         with tempfile.TemporaryDirectory() as folder:
             game = Path(folder)
             shutil.copy2(
-                ROOT / "dist" / "The Cube Beta Halloween Update.exe",
-                game / "The Cube Beta Halloween Update.exe",
+                executable,
+                game / executable.name,
             )
             for name in ("cpeloader.py", "cpeloader_core_runtime.js", "cpeloader_core.rb"):
                 shutil.copy2(ROOT / name, game / name)
@@ -198,7 +204,7 @@ class NuttyModIsolationTests(unittest.TestCase):
             self.assertIsNotNone(spec.loader)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            self.assertEqual(module._NUTTYMOD_GAME_VERSION, "6.4.1")
+            self.assertEqual(module._NUTTYMOD_GAME_VERSION, expected_version)
             self.assertEqual(module.LOADER_VERSION, "1.4.5")
 
     def test_security_door_is_main_game_code(self):

@@ -29,9 +29,8 @@ CPELOADER_COMPONENTS = (
 
 def _find_game_root() -> Path:
     for candidate in (_BOOTSTRAP_DIR, *_BOOTSTRAP_DIR.parents):
-        has_game = (candidate / "cube_core.py").is_file() or (
-            candidate / "The Cube Beta Halloween Update.exe"
-        ).is_file()
+        has_game = any((candidate/name).is_file() for name in
+            ('cube_core.py', 'The Cube Beta Halloween Update.exe', 'The Cube Beta Nightly.exe'))
         if has_game and (candidate / "cpeloader.py").is_file():
             return candidate
     raise RuntimeError(
@@ -82,11 +81,10 @@ def _game_version(root: Path) -> str:
         )
         if match:
             return match.group(1)
-    version = _windows_executable_version(
-        root / "The Cube Beta Halloween Update.exe"
-    )
-    if version:
-        return version
+    for name in ('The Cube Beta Nightly.exe', 'The Cube Beta Halloween Update.exe'):
+        version = _windows_executable_version(root/name)
+        if version:
+            return version
     raise RuntimeError("NuttyMod could not identify the Halloween game version.")
 
 
