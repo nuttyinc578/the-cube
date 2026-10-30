@@ -20,8 +20,8 @@ Halloween music still uses the official Pixabay source with the existing bundled
 
 Use Python 3.15.2 to create a new virtual environment, then `python -m pip install --only-binary=:all: -r requirements-nightly.txt`. Run `python tools/Build-Nightly.py` from this repository. Inno Setup 6 is needed for the installer. Outputs go to `build/nightly-download`, including portable ZIP, installer and SHA256SUMS.txt. It uses a new `build/nightly-game` folder and refuses to overwrite a previous nightly output.
 
-The dedicated `build-nightly.yml` workflow builds and tests Windows artifacts without replacing 6.4.1 or automatically publishing a GitHub release. Once pushed to `main` and successfully built, the nightly.link artifact URL is:
+The dedicated `build-nightly.yml` workflow builds and tests Windows artifacts without replacing 6.4.1 or automatically publishing a GitHub release. The successfully tested Windows artifact is available at:
 
 https://nightly.link/nuttyinc578/the-cube/workflows/build-nightly/main/The-Cube-Beta-6.4.2-nightly-Windows.zip
 
-That link is not live until the workflow is published and a build succeeds. The in-game updater never treats a nightly.link ZIP as a checksum-verified GitHub release; opening nightly.link is an explicitly confirmed browser action.
+Artifact downloads expire after 30 days; permanent downloads and checksums are on the [6.4.2-nightly prerelease](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.2-nightly). The in-game updater never treats a nightly.link ZIP as a checksum-verified GitHub release; opening nightly.link is an explicitly confirmed browser action.

@@ -1,15 +1,22 @@
-# The Cube Beta — Halloween Update 6.4.0
+# The Cube Beta — 6.4.1 Stable / 6.4.2 Nightly
+
+**Stable:** [6.4.1 installer and portable](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.1).
+**Experimental:** [6.4.2-nightly installer, portable and checksums](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.2-nightly).
+[Website](https://nuttyinc578.github.io/the-cube/).
+
+The new nightly uses Python 3.15.2 with pygame-ce and brings a Fluent Halloween home, seven themes, modern loading and CPELoader warnings, and the Cube Beta Updater. The Power & Remastered countdown awaits a release date. See [nightly notes and build instructions](NIGHTLY_6.4.2.md). Nightly builds are experimental; keep them separate from stable installs and backups.
 
 [![CPE release](https://img.shields.io/github/v/release/nuttyinc578/CPE-OPEN-source?style=for-the-badge&label=CPE)](https://github.com/nuttyinc578/CPE-OPEN-source/releases/latest)
 [![CPE status](https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml/badge.svg)](https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml)
 
-[![Build The Cube Beta 6.4.0](https://github.com/nuttyinc578/the-cube/actions/workflows/build-6.4.0.yml/badge.svg?branch=main)](https://github.com/nuttyinc578/the-cube/actions/workflows/build-6.4.0.yml)
-[![Download 6.4.0](https://img.shields.io/badge/Download-6.4.0_Halloween-ff7a18?style=for-the-badge&logo=windows)](https://nightly.link/nuttyinc578/the-cube/workflows/build-6.4.0/main/The-Cube-Beta-6.4.0-Windows.zip)
+[![Build The Cube Beta Nightly](https://github.com/nuttyinc578/the-cube/actions/workflows/build-nightly.yml/badge.svg?branch=main)](https://github.com/nuttyinc578/the-cube/actions/workflows/build-nightly.yml)
+[![Download stable 6.4.1](https://img.shields.io/badge/Download-6.4.1_Stable-ff7a18?style=for-the-badge&logo=windows)](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.1)
+[![Download nightly](https://img.shields.io/badge/nightly.link-6.4.2_Nightly-9d59d4?style=for-the-badge)](https://nightly.link/nuttyinc578/the-cube/workflows/build-nightly/main/The-Cube-Beta-6.4.2-nightly-Windows.zip)
 [![Theme Store](https://github.com/nuttyinc578/the-cube/actions/workflows/themes.yml/badge.svg?branch=main)](https://github.com/nuttyinc578/the-cube/actions/workflows/themes.yml)
 [![Download themes](https://img.shields.io/badge/nightly.link-download_themes-7c3aed?style=for-the-badge)](https://nightly.link/nuttyinc578/the-cube/workflows/themes/main/The-Cube-Beta-Themes.zip)
 
 > [!CAUTION]
-> **The Cube Beta 5.0 is no longer supported.** It no longer receives bug fixes, compatibility updates, security updates, or technical support. Upgrade to 6.4.0.
+> **The Cube Beta 5.0 is no longer supported.** It no longer receives bug fixes, compatibility updates, security updates, or technical support. Upgrade to stable 6.4.1.
 
 The Cube Beta is an interactive physics sandbox powered by the Cube Physics Engine (CPE) and Integrated Particle Engine (IPE). Version 6.4.0 adds an animated Halloween world and a mysterious **SECURITY ???** door. It opens the full-screen Broken Lands terminal: log in to the abandoned computer, run `OG.exe -list`, and recover a supported historical version with `OG.exe -6.3.0`, `OG.exe -6.2.2`, or `OG.exe -5.1`.
 
