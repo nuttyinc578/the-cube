@@ -55,7 +55,8 @@ jobs:
         with:
           ruby-version: '3.3'
       - name: Install pinned nightly dependencies
-        run: python -m pip install --disable-pip-version-check --only-binary=:all: -r requirements-nightly.txt
+        run: >-
+          python -m pip install --disable-pip-version-check --only-binary=:all: -r requirements-nightly.txt
       - name: Verify fallback music
         shell: pwsh
         run: ./tools/Get-FallMusic.ps1
