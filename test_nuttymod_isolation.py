@@ -159,7 +159,8 @@ class NuttyModIsolationTests(unittest.TestCase):
         runtime = package / "nuttymod_runtime_v122.pyc"
         if runtime.read_bytes()[:4] == importlib.util.MAGIC_NUMBER:
             self.skipTest("Legacy visual runtime matches this interpreter")
-        candidates = ((ROOT/'build'/'nightly-game'/'The Cube Beta Nightly.exe', '6.4.2-nightly'),
+        from release_info import VERSION, EXE_NAME
+        candidates = ((ROOT/'build'/'nightly-game'/EXE_NAME, VERSION),
                       (ROOT/'dist'/'The Cube Beta Halloween Update.exe', '6.4.1'))
         compiled = next(((path, version) for path, version in candidates if path.is_file()), None)
         if compiled is None:

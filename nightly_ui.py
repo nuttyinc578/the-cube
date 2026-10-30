@@ -11,6 +11,7 @@ from types import MethodType
 
 import pygame
 from cube_core import FPS, HEIGHT, WIDTH, VERSION, THEMES, app_path, bundle_path, save_settings
+from release_info import CHANNEL
 from cube_updater import CubeUpdater, RELEASES_URL, NIGHTLY_URL
 from fluent_ui import (BUILTINS, TEXT, SECONDARY, FluentButton, accent, background,
                        buttons, confirmation, cube, panel, paragraph, text)
@@ -67,10 +68,10 @@ def render_home(app, ticks=0):
     panel(app, pygame.Rect(24, 24, 235, 672), color=(20, 22, 34))
     cube(app, (69, 81), 25, ticks)
     text(app, 'THE CUBE', (112, 51), font=app.font)
-    text(app, 'BETA / NIGHTLY', (112, 80), SECONDARY)
+    text(app, f'BETA / {CHANNEL.upper()}', (112, 80), SECONDARY)
     items = home_items(app)
     controls = [FluentButton((41, 153+i*58, 201, 46), label, a) for i, (label, _) in enumerate(items)]
-    text(app, '6.4.2-nightly', (45, 599), a)
+    text(app, VERSION, (45, 599), a)
     text(app, 'Tab to navigate · Enter to select', (45, 631), SECONDARY, app.tiny, 192)
     text(app, 'F11 fullscreen', (45, 655), SECONDARY, app.tiny)
     text(app, 'YOUR PHYSICS. YOUR WORLD.', (291, 37), a)
@@ -256,7 +257,7 @@ def _updater_menu(app):
         background(app)
         text(app, 'OFFICIAL DOWNLOADS ONLY', (70, 44), accent(app))
         text(app, 'Cube Beta Updater', (67, 83), font=app.large)
-        text(app, f'Installed: {VERSION} / Python 3.15.2 nightly', (70, 147), SECONDARY)
+        text(app, f'Installed: {VERSION} / Python 3.15.2 / {CHANNEL}', (70, 147), SECONDARY)
         panel(app, pygame.Rect(70, 201, 960, 228))
         text(app, 'Updates blocked' if blocked else 'You stay in control.', (95, 227), font=app.font)
         paragraph(app, blocked or status, pygame.Rect(95, 273, 904, 131), (255, 166, 130) if blocked else SECONDARY)

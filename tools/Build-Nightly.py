@@ -12,6 +12,8 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from release_info import VERSION, EXE_NAME, PORTABLE_NAME, SETUP_NAME, NOTES_FILE, APP_NAME, INSTALLER_ID, WINDOWS_VERSION
 
 
 def run(*args, **kwargs):
@@ -41,7 +43,7 @@ def main():
         '--workpath', ROOT/'build'/'nightly-pyinstaller', ROOT/'nightly_build.spec')
     run(sys.executable, '-m', 'unittest',
         'test_nuttymod_isolation.NuttyModIsolationTests.test_portable_build_reads_version_from_executable', '-v')
-    shutil.copy2(ROOT/'NIGHTLY_6.4.2.md', folder/'NIGHTLY_6.4.2.md')
+    shutil.copy2(ROOT/NOTES_FILE, folder/NOTES_FILE)
     licences = folder/'third-party-licenses'
     licences.mkdir()
     for name in ('pygame-ce', 'pymunk', 'pyinstaller'):
@@ -59,28 +61,32 @@ def main():
             shutil.copy2(source, licences/'Python-LICENSE.txt')
             break
     # Smoke testing only renders to an explicit build QA folder, never userdata.
-    run(folder/'The Cube Beta Nightly.exe', '--nightly-self-test', ROOT/'build'/'nightly-qa'/'report.json', timeout=120)
+    run(folder/EXE_NAME, '--nightly-self-test', ROOT/'build'/'nightly-qa'/'report.json', timeout=120)
     report = json.loads((ROOT/'build'/'nightly-qa'/'report.json').read_text(encoding='utf-8'))
-    if report['python'] != '3.15.2' or report['version'] != '6.4.2-nightly' or not report['physics_ok']:
+    if report['python'] != '3.15.2' or report['version'] != VERSION or not report['physics_ok']:
         raise RuntimeError('Frozen nightly smoke test did not pass.')
     run(sys.executable, ROOT/'tools'/'Package-BaseHalloween.py', '--build-dir', 'build/nightly-game',
-        '--version', '6.4.2-nightly', '--exe-name', 'The Cube Beta Nightly.exe')
+        '--version', VERSION, '--exe-name', EXE_NAME)
     sys.path.insert(0, str(ROOT))
     from cpeloader import CPELoader
     if CPELoader(folder).changes():
         raise RuntimeError('Packaged integrity manifest does not match the nightly.')
     output = ROOT/'build'/'nightly-download'
     output.mkdir(exist_ok=True)
-    portable = ROOT/'build'/'The-Cube-Beta-Halloween-6.4.2-nightly-Portable.zip'
+    portable = ROOT/'build'/PORTABLE_NAME
     shutil.copy2(portable, output/portable.name)
-    shutil.copy2(ROOT/'NIGHTLY_6.4.2.md', output/'NIGHTLY_6.4.2.md')
+    shutil.copy2(ROOT/NOTES_FILE, output/NOTES_FILE)
     if not args.skip_installer:
         candidates = [Path(os.environ.get('ProgramFiles(x86)', 'C:/Program Files (x86)'))/'Inno Setup 6'/'ISCC.exe',
                       Path(os.environ.get('ProgramFiles', 'C:/Program Files'))/'Inno Setup 6'/'ISCC.exe']
         compiler = next((p for p in candidates if p.is_file()), None)
         if compiler is None:
             raise RuntimeError('Install Inno Setup 6 to build the nightly installer, or use --skip-installer.')
-        run(compiler, f'/DPayloadDir={folder}', f'/DOutputDir={output}', ROOT/'installer'/'TheCubeBetaNightly.iss')
+        run(compiler, f'/DPayloadDir={folder}', f'/DOutputDir={output}',
+            f'/DReleaseVersion={VERSION}', f'/DGameExe={EXE_NAME}', f'/DGameName={APP_NAME}',
+            f'/DInstallerId={INSTALLER_ID}', f'/DSetupName={Path(SETUP_NAME).stem}',
+            '/DWindowsVersion='+'.'.join(map(str, WINDOWS_VERSION)),
+            ROOT/'installer'/'TheCubeBetaNightly.iss')
     products = [p for p in output.iterdir() if p.suffix in {'.zip', '.exe'}]
     (output/'SHA256SUMS.txt').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in sorted(products)), encoding='ascii')
     print(f'Tested nightly downloads: {output}', flush=True)

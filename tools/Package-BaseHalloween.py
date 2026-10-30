@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from cpeloader import snapshot, write_json
+from release_info import SEASON
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
     write_json(folder/'cpeloader_state.json', {'unlocked': False, 'components': {
         'cpeloader.py': False, 'cpeloader_core_runtime.js': False, 'cpeloader_core.rb': False}})
     write_json(folder/'cpeloader_manifest.json', {'files': snapshot(folder)})
-    archive = folder.parent/(f'The-Cube-Beta-Halloween-{args.version}-Portable.zip' if args.version
+    archive = folder.parent/(f'The-Cube-Beta-{SEASON}-{args.version}-Portable.zip' if args.version
         else 'Cube-Beta-Halloween-GameLift-Prepared-Portable.zip')
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as output:
         for path in sorted(folder.rglob('*')):

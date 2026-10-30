@@ -1,6 +1,9 @@
 # Dedicated nightly build; stable release specs and assets are unchanged.
 from pathlib import Path
 from PyInstaller.utils.hooks import collect_data_files
+import sys
+sys.path.insert(0, str(Path(SPECPATH)))
+from release_info import EXE_NAME
 
 addon_datas = [(str(p), str(p.parent)) for p in Path('addons').rglob('*')
     if p.is_file() and '__pycache__' not in p.parts and not p.name.startswith('.')
@@ -19,7 +22,7 @@ a = Analysis(['the_cube_beta_summer.py'], pathex=['addons'], binaries=[],
     hiddenimports=['cpe_rephysics.engine', 'cpe_rephysics.physics', 'cpe_rephysics.particles', 'cpe_rephysics.protocol'],
     hookspath=[], hooksconfig={}, runtime_hooks=[], excludes=[], noarchive=False, optimize=0)
 pyz = PYZ(a.pure)
-exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name='The Cube Beta Nightly',
+exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name=Path(EXE_NAME).stem,
     debug=False, bootloader_ignore_signals=False, strip=False, upx=False,
     runtime_tmpdir=None, console=False, disable_windowed_traceback=False,
     icon=['icon.ico'], version='nightly_version.txt')

@@ -6,19 +6,19 @@
 #endif
 
 [Setup]
-AppId={{4EF5D2BD-C720-4355-92A6-3349EA2A9942}
-AppName=The Cube Beta Nightly
-AppVersion=6.4.2-nightly
+AppId={{{#InstallerId}}
+AppName={#GameName}
+AppVersion={#ReleaseVersion}
 AppPublisher=nutty'inc
 AppPublisherURL=https://github.com/nuttyinc578/the-cube
-DefaultDirName={localappdata}\Programs\The Cube Beta Nightly 6.4.2
-DefaultGroupName=The Cube Beta Nightly
+DefaultDirName={localappdata}\Programs\{#GameName} {#ReleaseVersion}
+DefaultGroupName={#GameName} {#ReleaseVersion}
 PrivilegesRequired=lowest
 LicenseFile={#PayloadDir}\LICENCE.txt
 SetupIconFile=..\icon.ico
 OutputDir={#OutputDir}
-OutputBaseFilename=The-Cube-Beta-6.4.2-nightly-Setup
-VersionInfoVersion=6.4.2.0
+OutputBaseFilename={#SetupName}
+VersionInfoVersion={#WindowsVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -30,20 +30,20 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 CloseApplications=no
 RestartApplications=no
-UninstallDisplayIcon={app}\The Cube Beta Nightly.exe
+UninstallDisplayIcon={app}\{#GameExe}
 
 [Files]
 Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\The Cube Beta Nightly"; Filename: "{app}\The Cube Beta Nightly.exe"
-Name: "{autodesktop}\The Cube Beta Nightly"; Filename: "{app}\The Cube Beta Nightly.exe"; Tasks: desktopicon
+Name: "{group}\{#GameName}"; Filename: "{app}\{#GameExe}"
+Name: "{autodesktop}\{#GameName}"; Filename: "{app}\{#GameExe}"; Tasks: desktopicon
 
 [Tasks]
 Name: desktopicon; Description: "Create a desktop shortcut"; Flags: unchecked
 
 [Run]
-Filename: "{app}\The Cube Beta Nightly.exe"; Description: "Play The Cube Beta Nightly"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#GameExe}"; Description: "Play {#GameName}"; Flags: nowait postinstall skipifsilent
 
 [Code]
 function FolderHasContents(const Folder: String): Boolean;
@@ -87,5 +87,5 @@ function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   Result := '';
   if FolderHasContents(ExpandConstant('{app}')) then
-    Result := 'Choose a new empty folder. This nightly will not overwrite an existing game or backup.';
+    Result := 'Choose a new empty folder. This release will not overwrite an existing game or backup.';
 end;

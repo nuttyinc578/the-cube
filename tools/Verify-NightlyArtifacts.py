@@ -6,14 +6,14 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from release_info import EXE_NAME, SETUP_NAME, PORTABLE_NAME
 from cpeloader import CPELoader, COMPONENTS
 from cube_launcher.core import unpack
 
 
 def main():
     folder = ROOT/'build'/'nightly-download'
-    expected = {'The-Cube-Beta-6.4.2-nightly-Setup.exe',
-                'The-Cube-Beta-Halloween-6.4.2-nightly-Portable.zip'}
+    expected = {SETUP_NAME, PORTABLE_NAME}
     found = set()
     for line in (folder/'SHA256SUMS.txt').read_text(encoding='ascii').splitlines():
         digest, name = line.split('  ', 1)
@@ -23,8 +23,8 @@ def main():
     assert found == expected
     with tempfile.TemporaryDirectory(prefix='nightly-portable-qa-', dir=ROOT/'build') as temporary:
         extracted = Path(temporary)
-        unpack(folder/'The-Cube-Beta-Halloween-6.4.2-nightly-Portable.zip', extracted)
-        assert (extracted/'The Cube Beta Nightly.exe').is_file()
+        unpack(folder/PORTABLE_NAME, extracted)
+        assert (extracted/EXE_NAME).is_file()
         assert (extracted/'third-party-licenses'/'pygame-ce'/'LGPL.txt').is_file() or list((extracted/'third-party-licenses'/'pygame-ce').rglob('LGPL.txt'))
         loader = CPELoader(extracted)
         assert not loader.unlocked and all(loader.state()['components'].get(n) is False for n in COMPONENTS)

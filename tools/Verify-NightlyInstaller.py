@@ -10,8 +10,9 @@ import winreg
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from cpeloader import CPELoader
+from release_info import EXE_NAME, SETUP_NAME, INSTALLER_ID
 
-REGISTRY = r'Software\Microsoft\Windows\CurrentVersion\Uninstall\{4EF5D2BD-C720-4355-92A6-3349EA2A9942}_is1'
+REGISTRY = 'Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{'+INSTALLER_ID+'}_is1'
 
 
 def registered():
@@ -28,7 +29,7 @@ def main():
     folder = Path(tempfile.mkdtemp(prefix='nightly-installer-qa-', dir=ROOT/'build')).resolve()
     if not folder.is_relative_to((ROOT/'build').resolve()):
         raise RuntimeError('A repository build-only folder is required.')
-    installer = ROOT/'build'/'nightly-download'/'The-Cube-Beta-6.4.2-nightly-Setup.exe'
+    installer = ROOT/'build'/'nightly-download'/SETUP_NAME
     def setup(destination, accept=False):
         args = [str(installer), '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-',
                 '/NOICONS', '/TASKS=', f'/DIR={destination}', f'/LOG={folder/(destination.name+".log")}']
@@ -51,7 +52,7 @@ def main():
         assert CPELoader(installed).changes() == [], 'Installed payload hashes differ'
         env = dict(os.environ, SDL_VIDEODRIVER='dummy', SDL_AUDIODRIVER='dummy')
         report = folder/'smoke'/'report.json'
-        subprocess.run([str(installed/'The Cube Beta Nightly.exe'), '--nightly-self-test', str(report)],
+        subprocess.run([str(installed/EXE_NAME), '--nightly-self-test', str(report)],
                        env=env, timeout=180, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
         data = json.loads(report.read_text(encoding='utf-8'))
         assert data['python'] == '3.15.2' and data['instance_menu_binding_ok'] and data['physics_ok']

@@ -23,8 +23,8 @@ from cpe import physics_backend as pymunk
 from cpe import CPEBridgeRuntime, CubePhysicsEngine, NumericCommand
 
 
-APP_TITLE = "The Cube Beta Halloween Nightly"
-VERSION = "6.4.2-nightly"
+from release_info import VERSION, SEASON, CHANNEL
+APP_TITLE = f"The Cube Beta {SEASON} {CHANNEL.title()}"
 WIDTH, HEIGHT = 1100, 720
 FLOOR_Y = HEIGHT - 54
 FPS = 60
