@@ -46,14 +46,15 @@ var nodeBridge = builder
 
 var bridgeEndpoint = nodeBridge.GetEndpoint("http");
 
-var packagedGame = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..", "The Cube Beta Error Update.exe"));
-var gameExecutable = File.Exists(packagedGame)
-    ? builder.AddExecutable("the-cube-beta-error-update", packagedGame, "../..")
+var gameFolder = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", ".."));
+var packagedGame = new[] { "The Cube Beta Nightly.exe", "The Cube Beta Halloween Update.exe", "The Cube Beta Error Update.exe" }
+    .Select(name => Path.Combine(gameFolder, name)).FirstOrDefault(File.Exists);
+var gameExecutable = packagedGame is not null
+    ? builder.AddExecutable("the-cube-beta", packagedGame, "../..")
     : builder.AddExecutable(
-        "the-cube-beta-error-update",
-        "py",
+        "the-cube-beta",
+        Environment.GetEnvironmentVariable("CPE_PYTHON_EXE") ?? "python",
         "../..",
-        "-3.10",
         "the_cube_beta_summer.py");
 
 gameExecutable

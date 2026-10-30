@@ -181,9 +181,9 @@ class NightlyUITests(unittest.TestCase):
                     set_theme(self.app, theme)
                     self.assertEqual(store.state()['active_theme'], theme)
 
-    def test_first_nightly_defaults_to_halloween_then_remembers_choice(self):
+    def test_first_christmas_defaults_then_remembers_choice(self):
         app = self.app
-        app.settings['fluent_ui_seen'] = False
+        app.settings['christmas_ui_seen'] = False
         app.settings['theme'] = 'maple'
         app.background_cache = {}
         app.theme_store.set_active_theme = Mock()
@@ -192,7 +192,7 @@ class NightlyUITests(unittest.TestCase):
         install_nightly_ui(FakeGame)
         with patch('nightly_ui.save_settings'):
             first = FakeGame()
-            self.assertEqual(first.settings['theme'], 'halloween')
+            self.assertEqual(first.settings['theme'], 'christmas')
             first.settings['theme'] = 'aurora'
             second = FakeGame()
             self.assertEqual(second.settings['theme'], 'aurora')
@@ -208,7 +208,7 @@ class NightlyUITests(unittest.TestCase):
             patches.enter_context(patch.object(game, 'AddonManager', return_value=SimpleNamespace(shapes=[], events=[], records=[])))
             instance = game.GameApp()
             self.assertIs(instance.main_menu.__func__, _main_menu)
-            self.assertEqual(instance.settings['theme'], 'halloween')
+            self.assertEqual(instance.settings['theme'], 'christmas')
             self.assertEqual(instance.fall_update_screen.__func__.__name__, 'startup')
             self.assertFalse(instance.cpeloader.unlocked)
 

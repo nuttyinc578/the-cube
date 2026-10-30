@@ -25,6 +25,8 @@ def main():
         extracted = Path(temporary)
         unpack(folder/PORTABLE_NAME, extracted)
         assert (extracted/EXE_NAME).is_file()
+        assert (extracted/'cpe.exe').is_file()
+        assert (extracted/'Open CPE Command Prompt.cmd').is_file()
         assert (extracted/'third-party-licenses'/'pygame-ce'/'LGPL.txt').is_file() or list((extracted/'third-party-licenses'/'pygame-ce').rglob('LGPL.txt'))
         loader = CPELoader(extracted)
         assert not loader.unlocked and all(loader.state()['components'].get(n) is False for n in COMPONENTS)

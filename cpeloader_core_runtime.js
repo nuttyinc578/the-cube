@@ -6,8 +6,8 @@ function status(root = __dirname) {
   let state = {};
   try { state = JSON.parse(fs.readFileSync(path.join(root, 'cpeloader_state.json'), 'utf8')); } catch {}
   try {
-    return {unlocked: state?.unlocked === true && components.every(name => state.components?.[name] === true && fs.statSync(path.join(root, name)).isFile())};
-  } catch { return {unlocked: false}; }
+    return {version: '2', unlocked: state?.unlocked === true && components.every(name => state.components?.[name] === true && fs.statSync(path.join(root, name)).isFile())};
+  } catch { return {version: '2', unlocked: false}; }
 }
 function requireFlash(root) {
   if (!status(root).unlocked) throw new Error('CPELoader locked: unlock from the game with Ctrl+A then Y.');

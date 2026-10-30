@@ -8,7 +8,7 @@ from cube_core import THEMES, WIDTH, HEIGHT
 TEXT = (242, 244, 251)
 SECONDARY = (168, 177, 198)
 BORDER = (66, 68, 88)
-BUILTINS = ('halloween', 'aurora', 'midnight', 'rose', 'maple', 'harvest', 'twilight')
+BUILTINS = ('christmas', 'halloween', 'aurora', 'midnight', 'rose', 'maple', 'harvest', 'twilight')
 
 
 def accent(app):
@@ -66,6 +66,10 @@ def background(app, ticks=0):
     for i in range(6, 0, -1):
         pygame.draw.circle(glow, (*color, 3), (900, 140), 65 + i * 37)
     app.screen.blit(glow, (0, 0))
+    if theme_id == 'christmas':
+        from christmas_update import snow
+        from cpe.performance import fast_enabled
+        snow(app.screen, ticks, 18 if fast_enabled() else 55)
     for i in range(16):
         x = (i * 137 + 47) % WIDTH
         y = int(42 + (i * 71) % 600 + math.sin(ticks * .5 + i) * 9)
@@ -122,6 +126,11 @@ def cube(app, center, size=64, ticks=0):
     if getattr(app, 'settings', {}).get('theme', 'halloween') == 'halloween':
         for eye in (-23, 23):
             pygame.draw.polygon(app.screen, (35, 24, 40), [(x+eye-8, y+10), (x+eye+7, y+15), (x+eye, y+27)])
+    elif getattr(app, 'settings', {}).get('theme') == 'christmas':
+        pygame.draw.polygon(app.screen, (231, 70, 88),
+                            [(x-size, y-size//2), (x+size//3, y-size*1.6), (x+size, y-size//2)])
+        pygame.draw.line(app.screen, (246, 251, 255), (x-size, y-size//2), (x+size, y-size//2), max(4, size//6))
+        pygame.draw.circle(app.screen, (246, 251, 255), (int(x+size//3), int(y-size*1.6)), max(4, size//7))
 
 
 def confirmation(app, title, body, accept='CONTINUE', danger=False):

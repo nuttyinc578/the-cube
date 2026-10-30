@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import struct
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,8 +35,16 @@ def main():
     folder = ROOT/'build'/'nightly-game'
     if folder.exists():
         raise RuntimeError('build/nightly-game already exists. Preserve it or choose a clean checkout before rebuilding.')
+    import pygame
+    from christmas_update import christmas_icon
+    (ROOT/'build').mkdir(exist_ok=True)
+    icon_png = ROOT/'build'/'christmas-icon.png'
+    pygame.image.save(christmas_icon(), str(icon_png))
+    icon_data = icon_png.read_bytes()
+    (ROOT/'build'/'christmas-icon.ico').write_bytes(
+        struct.pack('<HHH', 0, 1, 1) + struct.pack('<BBBBHHII', 64, 64, 0, 0, 1, 32, len(icon_data), 22) + icon_data)
     if not args.skip_tests:
-        run(sys.executable, '-m', 'unittest', 'test_nightly', 'test_cpeloader', 'test_halloween_music',
+        run(sys.executable, '-m', 'unittest', 'test_christmas', 'test_nightly', 'test_cpeloader', 'test_halloween_music',
             'test_og_recovery', 'test_nuttymod_isolation', 'test_error_update', 'test_summer_game',
             'test_theme_system', 'test_legacy_versions', 'test_cube_launcher', 'test_gamelift',
             'test_dedicated_server', 'cpe.tests.test_cpe', '-v')
@@ -43,6 +52,10 @@ def main():
         '--workpath', ROOT/'build'/'nightly-pyinstaller', ROOT/'nightly_build.spec')
     run(sys.executable, '-m', 'unittest',
         'test_nuttymod_isolation.NuttyModIsolationTests.test_portable_build_reads_version_from_executable', '-v')
+    run(sys.executable, '-m', 'PyInstaller', '--noconfirm', '--distpath', folder,
+        '--workpath', ROOT/'build'/'cpe-cli-pyinstaller', ROOT/'cpe_cli.spec')
+    shutil.copy2(ROOT/'Open CPE Command Prompt.cmd', folder/'Open CPE Command Prompt.cmd')
+    shutil.copy2(ROOT/'CPELOADER_V2.md', folder/'CPELOADER_V2.md')
     shutil.copy2(ROOT/NOTES_FILE, folder/NOTES_FILE)
     licences = folder/'third-party-licenses'
     licences.mkdir()
@@ -71,6 +84,8 @@ def main():
     from cpeloader import CPELoader
     if CPELoader(folder).changes():
         raise RuntimeError('Packaged integrity manifest does not match the nightly.')
+    # Read-only smoke test of the actual packaged cpe.exe.
+    run(folder/'cpe.exe', '-connect', folder, '-cpeloader', timeout=30)
     output = ROOT/'build'/'nightly-download'
     output.mkdir(exist_ok=True)
     portable = ROOT/'build'/PORTABLE_NAME
@@ -85,6 +100,7 @@ def main():
         run(compiler, f'/DPayloadDir={folder}', f'/DOutputDir={output}',
             f'/DReleaseVersion={VERSION}', f'/DGameExe={EXE_NAME}', f'/DGameName={APP_NAME}',
             f'/DInstallerId={INSTALLER_ID}', f'/DSetupName={Path(SETUP_NAME).stem}',
+            f'/DReleaseIcon={ROOT/"build"/"christmas-icon.ico"}',
             '/DWindowsVersion='+'.'.join(map(str, WINDOWS_VERSION)),
             ROOT/'installer'/'TheCubeBetaNightly.iss')
     products = [p for p in output.iterdir() if p.suffix in {'.zip', '.exe'}]

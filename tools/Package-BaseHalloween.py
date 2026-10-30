@@ -26,6 +26,8 @@ def main():
     for name in ('cpeloader.py', 'cpeloader_core_runtime.js', 'cpeloader_core.rb', 'LICENCE.txt',
                  'THIRD_PARTY_NOTICES.txt', 'GAMELIFT_SETUP.md', 'cpe-backend.json'):
         shutil.copy2(ROOT/name, folder/name)
+    for name in ('Run CPE Aspire.cmd', 'Run The Cube Beta CPE.cmd', 'Run CPE Java Client.cmd'):
+        shutil.copy2(ROOT/name, folder/name)
     for name in ('addons', 'themes', 'cpe', 'cpe_rephysics'):
         source = ROOT/name
         if source.exists():

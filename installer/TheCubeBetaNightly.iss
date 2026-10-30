@@ -15,7 +15,7 @@ DefaultDirName={localappdata}\Programs\{#GameName} {#ReleaseVersion}
 DefaultGroupName={#GameName} {#ReleaseVersion}
 PrivilegesRequired=lowest
 LicenseFile={#PayloadDir}\LICENCE.txt
-SetupIconFile=..\icon.ico
+SetupIconFile={#ReleaseIcon}
 OutputDir={#OutputDir}
 OutputBaseFilename={#SetupName}
 VersionInfoVersion={#WindowsVersion}
@@ -37,6 +37,7 @@ Source: "{#PayloadDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 
 [Icons]
 Name: "{group}\{#GameName}"; Filename: "{app}\{#GameExe}"
+Name: "{group}\CPE Command Prompt"; Filename: "{cmd}"; Parameters: "/K cd /d ""{app}"""; WorkingDir: "{app}"
 Name: "{autodesktop}\{#GameName}"; Filename: "{app}\{#GameExe}"; Tasks: desktopicon
 
 [Tasks]

@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -12,7 +15,6 @@ import (
 	"os/signal"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -23,7 +25,7 @@ type cacheStore struct {
 	mu        sync.RWMutex
 	state     json.RawMessage
 	updatedAt time.Time
-	version   atomic.Uint64
+	version   uint64
 }
 
 func newCacheStore() *cacheStore {
@@ -35,16 +37,19 @@ func (store *cacheStore) put(payload json.RawMessage) uint64 {
 	store.mu.Lock()
 	store.state = copyOfPayload
 	store.updatedAt = time.Now().UTC()
+	store.version++
+	version := store.version
 	store.mu.Unlock()
-	return store.version.Add(1)
+	return version
 }
 
 func (store *cacheStore) get() (json.RawMessage, time.Time, uint64) {
 	store.mu.RLock()
 	payload := append(json.RawMessage(nil), store.state...)
 	updated := store.updatedAt
+	version := store.version
 	store.mu.RUnlock()
-	return payload, updated, store.version.Load()
+	return payload, updated, version
 }
 
 func writeJSON(response http.ResponseWriter, status int, value any) {
@@ -64,11 +69,13 @@ func newHandler(store *cacheStore) http.Handler {
 			writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"ok": false, "error": "method not allowed"})
 			return
 		}
+		_, _, version := store.get()
 		writeJSON(response, http.StatusOK, map[string]any{
-			"ok":        true,
-			"service":   "cpe-go-cache",
-			"port_role": "cube_core cache",
-			"version":   store.version.Load(),
+			"ok":               true,
+			"service":          "cpe-go-cache",
+			"port_role":        "cube_core cache",
+			"version":          version,
+			"cache_protection": "sha256 / bounded / coherent snapshot",
 		})
 	})
 	mux.HandleFunc("/cache", func(response http.ResponseWriter, request *http.Request) {
@@ -84,19 +91,30 @@ func newHandler(store *cacheStore) http.Handler {
 				writeJSON(response, http.StatusRequestEntityTooLarge, map[string]any{"ok": false, "error": "cache body is too large"})
 				return
 			}
-			if len(payload) == 0 || !json.Valid(payload) {
+			var object map[string]json.RawMessage
+			if len(payload) == 0 || json.Unmarshal(payload, &object) != nil || object == nil {
 				writeJSON(response, http.StatusBadRequest, map[string]any{"ok": false, "error": "cache must be valid JSON"})
 				return
+			}
+			if expected := request.Header.Get("X-CPE-Cache-SHA256"); expected != "" {
+				sum := sha256.Sum256(payload)
+				actual := hex.EncodeToString(sum[:])
+				if subtle.ConstantTimeCompare([]byte(expected), []byte(actual)) != 1 {
+					writeJSON(response, http.StatusBadRequest, map[string]any{"ok": false, "error": "cache checksum mismatch"})
+					return
+				}
 			}
 			version := store.put(payload)
 			writeJSON(response, http.StatusAccepted, map[string]any{"ok": true, "version": version})
 		case http.MethodGet:
 			payload, updated, version := store.get()
+			sum := sha256.Sum256(payload)
 			writeJSON(response, http.StatusOK, map[string]any{
 				"ok":         true,
 				"version":    version,
 				"updated_at": updated,
 				"state":      payload,
+				"sha256":     hex.EncodeToString(sum[:]),
 			})
 		default:
 			writeJSON(response, http.StatusMethodNotAllowed, map[string]any{"ok": false, "error": "method not allowed"})

@@ -1,6 +1,7 @@
 "use strict";
 
 const http = require("node:http");
+const { createHash } = require("node:crypto");
 const { URL } = require("node:url");
 
 const PROTOCOL = "CPE/1";
@@ -112,13 +113,13 @@ function sendJson(response, status, payload) {
   response.end(body);
 }
 
-function readJson(request) {
+function readJson(request, maximum = MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
     request.on("data", (chunk) => {
       size += chunk.length;
-      if (size > MAX_BODY_BYTES) {
+      if (size > maximum) {
         reject(new Error("request body is too large"));
         request.destroy();
         return;
@@ -148,10 +149,12 @@ function createServer(options = {}) {
   async function forwardToGoCache(payload) {
     if (!goCacheUrl) return goCache;
     try {
+      const body = JSON.stringify(payload);
       const cacheResponse = await fetch(`${goCacheUrl}/cache`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json",
+          "X-CPE-Cache-SHA256": createHash("sha256").update(body).digest("hex") },
+        body,
         signal: AbortSignal.timeout(1500),
       });
       const result = await cacheResponse.json();
@@ -214,7 +217,11 @@ function createServer(options = {}) {
       }
 
       if (request.method === "POST" && url.pathname === "/state") {
-        latestState = await readJson(request);
+        const incoming = await readJson(request, 2 * 1024 * 1024);
+        if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) {
+          throw new Error("CPE cache must be a JSON object");
+        }
+        latestState = incoming;
         stateUpdatedAt = new Date().toISOString();
         const cache = await forwardToGoCache(latestState);
         sendJson(response, 202, { ok: true, updated_at: stateUpdatedAt, go_cache: cache });

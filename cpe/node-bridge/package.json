@@ -1,6 +1,6 @@
 {
   "name": "cube-physics-engine-bridge",
-  "version": "0.0.2",
+  "version": "0.0.3-nightly",
   "private": true,
   "description": "Dependency-free Node.js command compiler for Cube Physics Engine",
   "main": "server.js",

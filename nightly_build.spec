@@ -25,4 +25,4 @@ pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name=Path(EXE_NAME).stem,
     debug=False, bootloader_ignore_signals=False, strip=False, upx=False,
     runtime_tmpdir=None, console=False, disable_windowed_traceback=False,
-    icon=['icon.ico'], version='nightly_version.txt')
+    icon=['build/christmas-icon.ico'], version='nightly_version.txt')

@@ -66,7 +66,7 @@ class ErrorUpdateTests(unittest.TestCase):
         self.assertEqual(ERROR_CODE, "21CPE")
         self.assertEqual(ERROR_SLOGAN, "WE ARE DONE / WE ARE COOKED")
         self.assertEqual(ERROR_SLOGAN_COUNT, 5)
-        self.assertEqual(CPE_VERSION, "0.0.2")
+        self.assertEqual(CPE_VERSION, "0.0.3-nightly")
         self.assertEqual(EXPECTED_CPE_VERSION, CPE_VERSION)
 
     def test_cpe_health_report_uses_enhanced_renderer_runtime(self) -> None:
@@ -96,7 +96,7 @@ class ErrorUpdateTests(unittest.TestCase):
         self.assertTrue(controller.repaired)
         self.assertEqual(damaged.read_bytes(), (self.payload_root / "node-bridge/server.js").read_bytes())
         self.assertEqual(theme_store.backups, 1)
-        self.assertEqual(theme_store.current["cpe_version"], "0.0.2")
+        self.assertEqual(theme_store.current["cpe_version"], "0.0.3-nightly")
         self.assertEqual(theme_store.current["cpe_channel"], "stable")
         self.assertTrue((self.root / "backup" / "cpe" / str(report.backup) / "backup.json").is_file())
 

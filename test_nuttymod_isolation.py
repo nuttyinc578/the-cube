@@ -73,7 +73,7 @@ class NuttyModIsolationTests(unittest.TestCase):
         module = load_nuttymod_patch()
         self.assertEqual(module.STABLE_LOADER_VERSION, "1.4.5")
         self.assertEqual(module.BETA_LOADER_VERSION, "1.5.0-beta")
-        for version in ("6.4.0", "6.4.1", "6.4.2-nightly", "6.4.2"):
+        for version in ("6.4.0", "6.4.1", "6.4.2-nightly", "6.4.2", "6.4.3-nightly"):
             with self.subTest(version=version), tempfile.TemporaryDirectory() as folder:
                 root = make_cpeloader_game(folder, version)
                 self.assertEqual(module._require_supported_game(root), version)

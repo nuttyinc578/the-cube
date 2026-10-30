@@ -1,4 +1,4 @@
-"""The Cube Beta 6.4.2 nightly - Fluent Halloween, powered by CPE and IPE."""
+"""The Cube Beta 6.4.3 nightly - Fluent Christmas, CPE 0.0.3 and CPELoader v2."""
 
 from __future__ import annotations
 
@@ -1126,7 +1126,7 @@ class GameApp:
         bar = pygame.Surface((WIDTH, 64), pygame.SRCALPHA)
         bar.fill((8, 45, 68, 218))
         self.screen.blit(bar, (0, 0))
-        title = self.font.render("THE CUBE BETA  /  FALL LAB", True, WHITE)
+        title = self.font.render("THE CUBE BETA  /  CHRISTMAS LAB", True, WHITE)
         self.screen.blit(title, (16, 18))
         stats = self.small.render(f"{shape_count} SHAPES   â€¢   {energy} ENERGY", True, (184, 232, 240))
         self.screen.blit(stats, (325, 22))
@@ -1148,7 +1148,7 @@ class GameApp:
             self.screen.blit(name, name.get_rect(center=(WIDTH // 2, 100)))
             self.screen.blit(detail, detail.get_rect(center=(WIDTH // 2, 128)))
         else:
-            next_label = self.tiny.render(f"NEXT FALL EVENT  {float(event.get('next', 0)):.0f}s", True, WHITE)
+            next_label = self.tiny.render(f"NEXT CHRISTMAS EVENT  {float(event.get('next', 0)):.0f}s", True, WHITE)
             self.screen.blit(next_label, next_label.get_rect(center=(WIDTH // 2, 84)))
 
         if peer:
@@ -1191,6 +1191,8 @@ from nightly_ui import install_nightly_ui
 install_nightly_ui(GameApp)
 from cpeloader_ui import install_cpeloader_ui, LoaderReset
 install_cpeloader_ui(GameApp)
+from christmas_update import install_christmas_update
+install_christmas_update(GameApp)
 
 
 def main() -> None:

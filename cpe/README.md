@@ -1,6 +1,8 @@
 # Cube Physics Engine (CPE)
 
-CPE 0.0.2 is permanently embedded in The Cube Beta Error Update while preserving the physics sandbox, add-ons, multiplayer, Theme Store, and OG installer.
+CPE **0.0.3-nightly** is embedded in The Cube Beta **6.4.3-nightly Christmas Workshop**. Stable 6.4.2 retains its tested engine. See [CPELoader v2 and Fast CPE](../CPELOADER_V2.md).
+
+This nightly adds bounded immutable JSON cache snapshots, SHA-256 corruption checks, coherent Go cache versions and a consent-driven Fast CPE mode. Fast CPE reduces solver iterations and particles without changing the 120 Hz timestep. Digests are not authentication; the development bridges should remain on localhost.
 
 It combines:
 
@@ -16,7 +18,7 @@ CPE converts a fixed command language into numbers. It never evaluates arbitrary
 
 ## Easiest Windows launch
 
-- Double-click `Run CPE Aspire.cmd` to start Go, Node, and The Cube Beta Error Update together.
+- Double-click `Run CPE Aspire.cmd` to start Go, Node, and the installed Cube Beta together. Source checkouts need Python 3.15.2 with requirements-nightly.txt; set CPE_PYTHON_EXE to your virtual environment's python.exe if needed.
 - Double-click `Run The Cube Beta CPE.cmd` to run the CPE-powered game directly; it automatically connects when Aspire is available and keeps working in embedded mode when it is not.
 - Double-click `Run CPE Java Client.cmd` after Aspire starts to send a Java polygon command into the running game.
 - `Run CPE Offline.cmd` remains available as the standalone CPE/IPE laboratory.

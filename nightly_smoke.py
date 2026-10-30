@@ -33,9 +33,14 @@ def run(report_path):
             assert 'single' in actions and 'updater' in actions
             assert all(app.screen.get_rect().contains(b.rect) for b in controls)
             pygame.image.save(app.screen, str(report_path.parent/f'home-{theme}.png'))
-        app.settings['theme'] = 'halloween'
+        app.settings['theme'] = 'christmas'
         render_loading(app, .65, 1.2)
         pygame.image.save(app.screen, str(report_path.parent/'loading.png'))
+        from christmas_update import render_fast_warning, christmas_background
+        buttons(app, render_fast_warning(app), [])
+        pygame.image.save(app.screen, str(report_path.parent/'fast-cpe-warning.png'))
+        christmas_background(app, 1.2)
+        pygame.image.save(app.screen, str(report_path.parent/'christmas-world.png'))
         render_unlock(app)
         pygame.image.save(app.screen, str(report_path.parent/'cpeloader-unlock.png'))
         render_loader_warning(app, ['cpe-backend.json'], modified=True)
@@ -44,13 +49,21 @@ def run(report_path):
         assert buttons(app, items, [pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN, mod=0)])[0] == 0
         class StartupProbe:
             def __init__(self):
-                self.settings = {'theme': 'halloween', 'fluent_ui_seen': True}
+                self.settings = {'theme': 'halloween', 'fluent_ui_seen': True, 'christmas_ui_seen': True}
                 self.main_menu = lambda: 'obsolete-menu'
         install_nightly_ui(StartupProbe)
         assert StartupProbe().main_menu.__func__ is _main_menu
         for name in ('halloween_cube_icon.png', 'LICENCE.txt', 'nightly-config.json', 'click.mp3'):
             assert bundle_path(name).is_file(), f'Missing bundled asset: {name}'
         world = PhysicsWorld(900, SimpleNamespace(shapes=[], events=[]))
+        from cpe import __version__ as cpe_version
+        from cpe.backend import BACKEND
+        from cpe.performance import set_fast_mode
+        assert BACKEND == 'classic' and cpe_version == '0.0.3-nightly'
+        set_fast_mode(True)
+        assert world.cpe.fast_mode and world.cpe.space.iterations == 12
+        set_fast_mode(False)
+        assert not world.cpe.fast_mode and world.cpe.space.iterations == 20
         world.spawn(250, 110, owner='nightly-qa')
         for _ in range(60):
             world.update(1/60, 0, 1)
@@ -60,7 +73,8 @@ def run(report_path):
             'pygame': pygame.version.ver, 'pygame_ce': bool(getattr(pygame, 'IS_CE', False)),
             'physics_ok': True, 'themes_rendered': list(BUILTINS),
             'keyboard_ok': True, 'instance_menu_binding_ok': True,
-            'loader_default': 'locked', 'network_used': False}
+            'loader_default': 'locked', 'cpeloader_version': '2', 'cpe_version': '0.0.3-nightly',
+            'cache_protection': True, 'network_used': False}
         report_path.write_text(json.dumps(report, indent=2), encoding='utf-8')
     finally:
         if world is not None:

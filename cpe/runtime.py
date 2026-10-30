@@ -10,6 +10,7 @@ from typing import Any, Mapping
 
 from .client import BridgeClient, BridgeError
 from .protocol import NumericCommand, ProtocolError, parse_numeric_line
+from .cache import CacheError, ProtectedSnapshot
 
 
 class CPEBridgeRuntime:
@@ -21,7 +22,8 @@ class CPEBridgeRuntime:
         self.enabled = bool(enabled)
         self._commands: queue.Queue[str] = queue.Queue(maxsize=500)
         self._state_lock = threading.Lock()
-        self._latest_cache: tuple[int, dict[str, Any]] | None = None
+        self._latest_cache: tuple[int, ProtectedSnapshot] | None = None
+        self._cache_rejections = 0
         self._published_generation = 0
         self._generation = 0
         self._status_lock = threading.Lock()
@@ -66,7 +68,7 @@ class CPEBridgeRuntime:
                 with self._state_lock:
                     pending = self._latest_cache
                 if pending is not None and pending[0] > self._published_generation:
-                    client.publish_state(pending[1])
+                    client.publish_state(pending[1].restore())
                     self._published_generation = pending[0]
 
                 service = str(health.get("service", "CPE Node bridge"))
@@ -88,9 +90,16 @@ class CPEBridgeRuntime:
         payload.setdefault("protocol", "CPE/1")
         payload["cache_source"] = "cube_core"
         payload["cache_timestamp"] = round(time.time(), 3)
+        try:
+            protected = ProtectedSnapshot.capture(payload)
+        except CacheError as exc:
+            with self._status_lock:
+                self._cache_rejections += 1
+                self._last_error = str(exc)
+            return
         with self._state_lock:
             self._generation += 1
-            self._latest_cache = self._generation, payload
+            self._latest_cache = self._generation, protected
 
     def drain_commands(self, limit: int = 100) -> list[NumericCommand]:
         commands: list[NumericCommand] = []
@@ -117,6 +126,8 @@ class CPEBridgeRuntime:
                 "connected": self._connected,
                 "detail": self._detail,
                 "last_error": self._last_error,
+                "cache_protection": "sha256 / immutable / 2 MiB maximum",
+                "cache_rejections": self._cache_rejections,
             }
 
     def close(self) -> None:

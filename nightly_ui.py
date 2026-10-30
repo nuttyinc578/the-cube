@@ -73,13 +73,15 @@ def render_home(app, ticks=0):
     controls = [FluentButton((41, 153+i*58, 201, 46), label, a) for i, (label, _) in enumerate(items)]
     text(app, VERSION, (45, 599), a)
     text(app, 'Tab to navigate · Enter to select', (45, 631), SECONDARY, app.tiny, 192)
-    text(app, 'F11 fullscreen', (45, 655), SECONDARY, app.tiny)
+    text(app, 'Ctrl+Alt+T / Fast CPE', (45, 655), SECONDARY, app.tiny)
+    from cpe.performance import fast_enabled
+    text(app, 'FAST CPE ON' if fast_enabled() else 'CPE 0.0.3 / Protected cache', (292, 155), a, app.tiny)
     text(app, 'YOUR PHYSICS. YOUR WORLD.', (291, 37), a)
     text(app, 'Welcome back.', (289, 70), font=app.large)
-    text(app, 'Halloween by default. A fresh space to create.', (292, 130), SECONDARY)
+    text(app, 'Christmas by default. Your winter workshop awaits.', (292, 130), SECONDARY)
     panel(app, pygame.Rect(283, 179, 793, 238), color=(32, 31, 47))
-    text(app, 'HALLOWEEN / FLUENT EXPERIENCE', (311, 204), a)
-    text(app, 'Make a little chaos.', (310, 241), font=app.large)
+    text(app, 'CHRISTMAS / FLUENT EXPERIENCE', (311, 204), a)
+    text(app, 'Shake up a snow globe.', (310, 241), font=app.large)
     text(app, 'Grab, throw and build with CPE + IPE particles.', (313, 302), SECONDARY)
     cube(app, (960, 290), 57, ticks)
     controls += [FluentButton((311, 348, 229, 46), 'Play solo  →', a, primary=True),
@@ -97,7 +99,7 @@ def render_home(app, ticks=0):
     text(app, 'The Cube Beta · Power & Remastered', (305, 609), font=app.font)
     text(app, power_countdown(getattr(app, 'power_release_utc', None)), (305, 649), SECONDARY)
     unlocked = getattr(app, 'cpeloader', None) and app.cpeloader.unlocked
-    text(app, 'LOADER UNLOCKED' if unlocked else 'CPELOADER LOCKED', (858, 649), a, app.tiny)
+    text(app, 'LOADER UNLOCKED' if unlocked else 'CPELOADER v2 LOCKED', (858, 649), a, app.tiny)
     return controls, [key for _, key in items]+['single', 'multiplayer', 'themes', 'addons']
 
 
@@ -307,7 +309,7 @@ def render_loading(app, progress, ticks=0, status='Preparing your physics world'
     panel(app, pygame.Rect(170, 88, 760, 544))
     text(app, f'THE CUBE BETA / {VERSION}', (212, 123), accent(app))
     cube(app, (550, 280), 70, ticks)
-    text(app, 'A little spooky. A lot of physics.', (240, 381), font=app.font)
+    text(app, 'Snow, shapes and a little Christmas magic.', (240, 381), font=app.font)
     text(app, status, (212, 427), SECONDARY, width=674)
     track = pygame.Rect(212, 474, 676, 8)
     pygame.draw.rect(app.screen, (54, 55, 73), track, border_radius=4)
@@ -328,9 +330,8 @@ def _loading_screen(app):
             app.halloween_music_status = 'Halloween music ready'
         except (HalloweenMusicError, OSError) as exc:
             app.halloween_music_error = str(exc)
-    if not app.halloween_music.ready:
-        threading.Thread(target=music, daemon=True).start()
-    stages = ['Preparing CPE and IPE', 'Applying Fluent theme', 'Preparing Halloween audio', 'Your world is ready']
+    # Christmas keeps bundled audio offline; no Halloween download is started.
+    stages = ['Verifying CPE 0.0.3 cache protection', 'Applying Christmas theme', 'Preparing winter workshop', 'Your world is ready']
     while True:
         progress = min(1, (time.monotonic()-started)/4)
         events = pygame.event.get()
@@ -345,9 +346,8 @@ def _loading_screen(app):
         pygame.display.flip()
         app.clock.tick(FPS)
         if progress >= 1 or skip:
-            _load_halloween_music(app)
             app.start_music()
-            loading_event(app, 'Fluent Halloween nightly ready')
+            loading_event(app, 'Fluent Christmas nightly ready')
             return True
 
 
@@ -358,12 +358,12 @@ def install_nightly_ui(game_app):
     original = game_app.__init__
     def initialize(app, *args, **kwargs):
         original(app, *args, **kwargs)
-        if not app.settings.get('fluent_ui_seen'):
-            set_theme(app, 'halloween')
-            app.settings['fluent_ui_seen'] = True
+        if not app.settings.get('christmas_ui_seen'):
+            set_theme(app, 'christmas')
+            app.settings['christmas_ui_seen'] = True
             save_settings(app.settings)
         app.power_release_utc = countdown_target()
-        pygame.display.set_caption(f'The Cube Beta / {VERSION} / Fluent Halloween')
+        pygame.display.set_caption(f'The Cube Beta / {VERSION} / Fluent Christmas')
         # Error Update binds an instance method, which wins over class patches.
         # Explicitly replace it so the real running game gets the new home.
         app.main_menu = MethodType(_main_menu, app)

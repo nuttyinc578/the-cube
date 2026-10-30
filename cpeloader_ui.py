@@ -49,7 +49,7 @@ def unlock_screen(app):
 def render_unlock(app, progress=1, error=''):
     background(app)
     panel(app, pygame.Rect(162, 72, 776, 576))
-    text(app, 'CPELOADER / DEVICE INTEGRITY', (207, 109), accent(app))
+    text(app, 'CPELOADER v2 / DEVICE INTEGRITY', (207, 109), accent(app))
     text(app, 'Unlock your cube?', (204, 156), font=app.large, width=683)
     paragraph(app, 'Unlocking lets trusted tools change the engine and game files. Modified code can run with your user permissions. Only flash projects you trust.', pygame.Rect(207, 238, 679, 108))
     panel(app, pygame.Rect(207, 364, 685, 132), color=(43, 34, 43), radius=12)
@@ -64,7 +64,7 @@ def render_unlock(app, progress=1, error=''):
 def render_loader_warning(app, changes, modified=False):
     background(app)
     panel(app, pygame.Rect(150, 70, 800, 580))
-    text(app, 'CPELOADER / REVIEW BEFORE CONTINUING', (192, 109), (255, 162, 119))
+    text(app, 'CPELOADER v2 / REVIEW BEFORE CONTINUING', (192, 109), (255, 162, 119))
     text(app, 'Your game has changed.' if modified else 'Your loader is unlocked.', (189, 159), font=app.large, width=711)
     paragraph(app, 'Files differ from the original release, or verification is unavailable. Continue only if you trust these modifications.' if modified else 'Loading paused at 50%. Flashing is enabled for Python, Node.js and Ruby. This is not an error, but modified code is not verified by the game.', pygame.Rect(192, 241, 714, 95))
     panel(app, pygame.Rect(192, 356, 716, 152), color=(38, 31, 43), radius=12)
@@ -136,7 +136,7 @@ def loader_loading(app):
         if not app.common_events(events): return False
         background(app)
         panel(app, pygame.Rect(150, 100, 800, 510))
-        text(app, 'CPELOADER / STARTUP', (195, 140), accent(app))
+        text(app, 'CPELOADER v2 / STARTUP', (195, 140), accent(app))
         text(app, 'Preparing your cube.', (192, 193), font=app.large)
         text(app, 'Verifying the base game, CPE and IPE managed files', (195, 281))
         text(app, 'UNLOCKED' if app.cpeloader.unlocked else 'LOCKED / ENGINE FLASHING BLOCKED', (195, 332), accent(app))
@@ -150,7 +150,7 @@ def loader_loading(app):
             line(app, 'WARNING: Unlocked loader / NuttyMod updates enabled.' if app.cpeloader.unlocked_updates_enabled else 'WARNING: CPELoader unlocked. Updates require the installer.', HEIGHT-42, (255, 211, 92))
         pygame.display.flip(); app.clock.tick(FPS)
         if progress >= 1:
-            loading_event(app, 'CPELoader complete; Halloween loading screen next')
+            loading_event(app, 'CPELoader complete; Christmas loading screen next')
             return True
 
 

@@ -16,7 +16,7 @@ if $PROGRAM_NAME == __FILE__
   root = ARGV[0] || __dir__
   begin
     CPELoaderCore.require_flash(root) if ARGV[1] == 'flash'
-    puts JSON.generate({unlocked: CPELoaderCore.unlocked?(root)})
+    puts JSON.generate({version: '2', unlocked: CPELoaderCore.unlocked?(root)})
   rescue StandardError => error
     warn error.message
     exit 1

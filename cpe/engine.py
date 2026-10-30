@@ -57,6 +57,17 @@ class CubePhysicsEngine:
         self.paused = False
         self._create_boundaries()
         self._install_collision_particles()
+        self._normal_particle_limit = self.particles.max_particles
+        self.fast_mode = False
+        from .performance import register
+        register(self)
+
+    def set_fast_mode(self, enabled: bool) -> None:
+        self.fast_mode = bool(enabled)
+        self.space.iterations = 12 if self.fast_mode else 20
+        self.particles.max_particles = min(800, self._normal_particle_limit) if self.fast_mode else self._normal_particle_limit
+        if len(self.particles.particles) > self.particles.max_particles:
+            self.particles.particles = self.particles.particles[:self.particles.max_particles]
 
     def _create_boundaries(self) -> None:
         static = self.space.static_body
@@ -169,6 +180,8 @@ class CubePhysicsEngine:
         if record is None:
             return False
         self._shape_colors.pop(record.shape, None)
+        removed_id = id(record.shape)
+        self._collision_times = {key: stamp for key, stamp in self._collision_times.items() if removed_id not in key}
         if record.shape in self.space.shapes:
             self.space.remove(record.shape, record.body)
         return True
@@ -177,6 +190,7 @@ class CubePhysicsEngine:
         for entity_id in list(self.bodies):
             self.remove(entity_id)
         self.particles.clear()
+        self._collision_times.clear()
 
     def particle_snapshot(self, limit: int = 400) -> list[dict[str, Any]]:
         return self.particles.snapshot(limit)
@@ -222,7 +236,12 @@ class CubePhysicsEngine:
         return self.execute(parse_numeric_line(line))
 
     def step(self, dt: float) -> None:
-        dt = max(0.0, min(float(dt), 0.25))
+        dt = float(dt)
+        if not math.isfinite(dt):
+            return
+        dt = max(0.0, min(dt, 0.25))
+        self._collision_times = {key: stamp for key, stamp in self._collision_times.items()
+                                 if self._simulation_time - stamp < 1.0}
         self.particles.update(dt)
         if self.paused:
             return
@@ -272,7 +291,11 @@ class CubePhysicsEngine:
             "body_count": len(snapshot["bodies"]),
             "particle_count": snapshot["particle_count"],
             "fixed_step_hz": round(1 / self._fixed_step),
-            "quality": "enhanced",
+            "quality": "fast" if self.fast_mode else "enhanced",
+            "fast_mode": self.fast_mode,
+            "solver_iterations": self.space.iterations,
+            "particle_limit": self.particles.max_particles,
+            "cache_protection": True,
         }
 
     def render(self, surface: Any, *, clear: bool = True) -> None:

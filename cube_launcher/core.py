@@ -103,6 +103,8 @@ def update_guard(game):
         raise PermissionError('Unreadable CPELoader state. Update blocked; use the official installer.') from None
     if state['unlocked'] or any(components.values()):
         raise PermissionError('CPELoader is unlocked or partially unlocked. Launcher updates are blocked. Use the official installer.')
+    if state.get('integrity_blocked'):
+        raise PermissionError('CPELoader was relocked with integrity warnings. Restore official files or use the installer.')
 
 
 def unpack(archive, destination):

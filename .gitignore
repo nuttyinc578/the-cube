@@ -218,6 +218,7 @@ cpe/**/obj/
 cpe/java-client/out/
 !summer_build.spec
 !nightly_build.spec
+!cpe_cli.spec
 !addons/nuttymod/nuttymod_runtime_v122.pyc
 
 # The Cube Beta runtime theme state and reversible backups

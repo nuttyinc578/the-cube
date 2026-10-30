@@ -15,7 +15,7 @@ from cube_launcher.core import request, redirected, update_guard
 REPO = 'nuttyinc578/the-cube'
 API = f'https://api.github.com/repos/{REPO}/releases?per_page=100'
 RELEASES_URL = f'https://github.com/{REPO}/releases'
-NIGHTLY_URL = 'https://nightly.link/nuttyinc578/the-cube/workflows/build-nightly/main/The-Cube-Beta-6.4.2-nightly-Windows.zip'
+NIGHTLY_URL = 'https://nightly.link/nuttyinc578/the-cube/workflows/build-nightly/main/The-Cube-Beta-6.4.3-nightly-Windows.zip'
 LIMIT = 900 * 1024 * 1024
 
 
@@ -81,6 +81,10 @@ class CubeUpdater:
 
     def require_update(self):
         update_guard(self.root)  # No unlocked-update bypass is honored by this updater.
+        if (self.root/'cpeloader_manifest.json').exists():
+            from cpeloader import CPELoader
+            if CPELoader(self.root).changes():
+                raise PermissionError('Modified game files: use the external installer in a new folder.')
         profile = self.root/'cpe-flash-profile.json'
         if profile.exists():
             try:

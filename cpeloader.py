@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 
 COMPONENTS = ('cpeloader.py', 'cpeloader_core_runtime.js', 'cpeloader_core.rb')
+LOADER_VERSION = '2'
 EXCLUDED_DIRS = {'.git', '.venv', '.pytest_cache', '__pycache__', 'build', 'dist', 'backup', 'backups', 'installer-output', 'package-staging', 'release-download', 'legacy-versions', 'og-recovery', 'node_modules', 'obj', 'inbox', 'publish-work'}
 EXCLUDED_DIRS.add('userdata')  # Player data changes are not executable modifications.
 MUTABLE = {'settings.json', 'halloween_update_state.json', 'error_update_state.json', 'og-current-version.json', 'cpeloader_state.json', 'cpeloader_manifest.json', 'halloween_music.mp3', 'fall_music.mp3'}
@@ -62,6 +63,26 @@ class CPELoader:
         if not all((self.root/name).is_file() for name in COMPONENTS):
             raise RuntimeError('Reinstall the game: a CPELoader component is missing.')
         write_json(self.path, {'unlocked': True, 'components': {name: True for name in COMPONENTS}, 'baseline': snapshot(self.root)})
+
+    def lock(self) -> list[str]:
+        """Lock every component without blessing changed files or replacing the baseline."""
+        if not all((self.root/name).is_file() for name in COMPONENTS):
+            raise RuntimeError('Not a complete Cube Beta folder: CPELoader components are missing.')
+        for path in (self.path, self.path.with_name(self.path.name+'.writing'),
+                     self.root/'cpeloader_manifest.json'):
+            if path.is_symlink() or (hasattr(path, 'is_junction') and path.is_junction()):
+                raise RuntimeError('Redirected loader files are not supported.')
+        state = self.state()
+        if state.get('state_error'):
+            raise RuntimeError('Loader state is unreadable. Restore a known-good backup first.')
+        changes = self.changes()
+        locked = {'loader_version': LOADER_VERSION, 'unlocked': False, 'integrity_blocked': bool(changes),
+                  'components': {name: False for name in COMPONENTS}}
+        # A missing release manifest must remain visible even after relocking.
+        if isinstance(state.get('baseline'), dict):
+            locked['baseline'] = state['baseline']
+        write_json(self.path, locked)
+        return changes
 
     def changes(self) -> list[str]:
         state = self.state()

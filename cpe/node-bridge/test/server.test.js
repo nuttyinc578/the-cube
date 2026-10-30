@@ -3,6 +3,7 @@
 const assert = require("node:assert/strict");
 const http = require("node:http");
 const test = require("node:test");
+const { createHash } = require("node:crypto");
 
 const { compileCommand, createServer } = require("../server.js");
 
@@ -49,7 +50,9 @@ test("forwards cube_core cache to the Go port", async (context) => {
   const goCache = http.createServer(async (request, response) => {
     const chunks = [];
     for await (const chunk of request) chunks.push(chunk);
-    cached = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    const raw = Buffer.concat(chunks);
+    assert.equal(request.headers["x-cpe-cache-sha256"], createHash("sha256").update(raw).digest("hex"));
+    cached = JSON.parse(raw.toString("utf8"));
     response.writeHead(202, { "Content-Type": "application/json" });
     response.end(JSON.stringify({ ok: true, version: 3 }));
   });

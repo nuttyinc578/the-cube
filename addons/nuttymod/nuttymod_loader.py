@@ -19,7 +19,7 @@ _BOOTSTRAP_DIR = Path(__file__).resolve().parent
 _RUNTIME_FILE = _BOOTSTRAP_DIR / "nuttymod_runtime_v122.pyc"
 STABLE_LOADER_VERSION = "1.4.5"
 BETA_LOADER_VERSION = "1.5.0-beta"
-SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly", "6.4.2")
+SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly", "6.4.2", "6.4.3-nightly")
 CPELOADER_COMPONENTS = (
     "cpeloader.py",
     "cpeloader_core_runtime.js",

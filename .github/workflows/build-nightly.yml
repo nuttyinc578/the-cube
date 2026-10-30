@@ -8,6 +8,11 @@ on:
       - '.github/workflows/build-nightly.yml'
       - 'nightly*'
       - 'release_info.py'
+      - 'cpe-backend.json'
+      - 'christmas_update.py'
+      - 'test_christmas.py'
+      - 'cpeloader_cli.py'
+      - 'cpe_cli.spec'
       - 'fluent_ui.py'
       - 'cube_updater.py'
       - 'cube_core.py'
@@ -61,6 +66,14 @@ jobs:
       - name: Verify fallback music
         shell: pwsh
         run: ./tools/Get-FallMusic.ps1
+      - name: Test Node bridge and Go cache
+        shell: pwsh
+        run: |
+          node --test cpe/node-bridge/test/server.test.js
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Push-Location cpe/go-cache
+          try { go test ./...; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
+          finally { Pop-Location }
       - name: Install Inno Setup on this disposable runner
         run: choco install innosetup --no-progress --yes
       - name: Test, build, smoke-test and package nightly plus installer
@@ -72,7 +85,7 @@ jobs:
       - name: Upload tested nightly.link downloads
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: The-Cube-Beta-Windows
+          name: The-Cube-Beta-6.4.3-nightly-Windows
           path: build/nightly-download/*
           if-no-files-found: error
           retention-days: 30

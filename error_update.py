@@ -29,7 +29,7 @@ from cube_core import FPS, HEIGHT, VERSION, WIDTH, app_path, bundle_path
 ERROR_CODE = "21CPE"
 ERROR_SLOGAN = "WE ARE DONE / WE ARE COOKED"
 ERROR_SLOGAN_COUNT = 5
-EXPECTED_CPE_VERSION = "0.0.2"
+EXPECTED_CPE_VERSION = "0.0.3-nightly"
 
 REPAIR_FILES = (
     "node-bridge/package.json",

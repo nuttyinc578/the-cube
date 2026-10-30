@@ -18,8 +18,8 @@ from typing import Any, Callable, Iterable
 
 
 THEME_FORMAT_VERSION = 1
-CPE_STABLE_VERSION = "0.0.2"
-CPE_DEV_BETA_VERSION = "0.0.2-error-beta"
+CPE_STABLE_VERSION = "0.0.3-nightly"
+CPE_DEV_BETA_VERSION = "0.0.3-nightly"
 THEME_REPOSITORY = "nuttyinc578/the-cube"
 THEMES_NIGHTLY_URL = (
     "https://nightly.link/nuttyinc578/the-cube/workflows/themes/main/"
@@ -27,7 +27,7 @@ THEMES_NIGHTLY_URL = (
 )
 UPDATE_NIGHTLY_URL = (
     "https://nightly.link/nuttyinc578/the-cube/workflows/build-nightly/main/"
-    "The-Cube-Beta-6.4.2-nightly-Windows.zip"
+    "The-Cube-Beta-6.4.3-nightly-Windows.zip"
 )
 
 THEME_DISCLAIMER = (
@@ -38,7 +38,7 @@ THEME_DISCLAIMER = (
 )
 
 PALETTE_KEYS = ("sky_top", "sky_bottom", "water", "sand", "sun", "accent", "panel")
-BUILTIN_THEME_IDS = {"halloween", "aurora", "midnight", "rose", "maple", "harvest", "twilight"}
+BUILTIN_THEME_IDS = {"christmas", "halloween", "aurora", "midnight", "rose", "maple", "harvest", "twilight"}
 UNSAFE_JAR_SUFFIXES = {
     ".class",
     ".com",

@@ -54,6 +54,10 @@ FALL_PALETTE = [
 SUMMER_PALETTE = FALL_PALETTE
 
 THEMES = {
+    "christmas": {
+        "sky_top": (10, 29, 43), "sky_bottom": (40, 84, 99),
+        "water": (28, 84, 78), "sand": (200, 229, 237), "sun": (126, 236, 196),
+    },
     "halloween": {
         "sky_top": (13, 9, 28),
         "sky_bottom": (74, 34, 86),
@@ -104,6 +108,7 @@ DEFAULT_SETTINGS = {
     "sound": True,
     "event_interval": 18,
     "fluent_ui_seen": False,
+    "christmas_ui_seen": False,
 }
 
 
@@ -733,6 +738,16 @@ BUILTIN_EVENTS = [
 ]
 
 
+CHRISTMAS_EVENTS = [
+    {"name": "Snow Globe", "duration": 8, "wind": 90, "gravity_scale": .35, "spawn_count": 8,
+     "banner": "Float through a winter snow globe.", "color": (181, 227, 250)},
+    {"name": "Gift Shower", "duration": 7, "wind": 0, "gravity_scale": .85, "spawn_count": 14,
+     "banner": "A delivery of colorful shapes from the winter workshop!", "color": (232, 104, 122)},
+    {"name": "Sleigh Breeze", "duration": 7, "wind": 520, "gravity_scale": .9, "spawn_count": 4,
+     "banner": "A gentle sleigh wind carries your creations.", "color": (134, 232, 189)},
+]
+
+
 class FallEventController:
     def __init__(self, interval: int, addons: AddonManager):
         self.interval = interval
@@ -744,7 +759,7 @@ class FallEventController:
         self.last_name = ""
 
     def trigger(self, world: PhysicsWorld) -> None:
-        choices = BUILTIN_EVENTS + self.addons.events
+        choices = CHRISTMAS_EVENTS + self.addons.events
         filtered = [event for event in choices if event["name"] != self.last_name] or choices
         event = dict(random.choice(filtered))
         self.active = event
