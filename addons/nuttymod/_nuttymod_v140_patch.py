@@ -17,7 +17,7 @@ import zipfile
 
 STABLE_LOADER_VERSION = "1.4.5"
 BETA_LOADER_VERSION = "1.5.0-beta"
-SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly")
+SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly", "6.4.2")
 PATCH_VERSION = STABLE_LOADER_VERSION
 GAME_EDITION = "Halloween Update"
 GAME_VERSION = "6.4.1"
@@ -142,7 +142,8 @@ def _detected_game_version(root: Path | None = None) -> str:
         return str(_RUNTIME["_NUTTYMOD_GAME_VERSION"])
     game_root = _game_root() if root is None else Path(root).resolve()
     try:
-        source = (game_root / "cube_core.py").read_text(encoding="utf-8-sig")
+        source_path = game_root / ("release_info.py" if (game_root/"release_info.py").is_file() else "cube_core.py")
+        source = source_path.read_text(encoding="utf-8-sig")
     except OSError as exc:
         raise RuntimeError(f"NuttyMod could not read cube_core.py: {exc}") from exc
     match = re.search(r'^VERSION\s*=\s*["\']([^"\']+)["\']', source, re.MULTILINE)
