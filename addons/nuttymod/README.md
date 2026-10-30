@@ -1,50 +1,52 @@
-# NuttyMod Loader for The Cube Beta — isolated
+# NuttyMod Loader for The Cube Beta Halloween Update
 
-NuttyMod is preserved in this separate folder for compatibility and recovery.
-The Cube Beta's normal add-on manager scans only files directly inside `addons`,
-so it does not discover or start anything in `addons/nuttymod`.
+This package provides NuttyMod Loader **1.4.5 Stable** and **1.5.0-beta**.
+It supports The Cube Beta Halloween Update versions **6.4.0**, **6.4.1**,
+and **6.4.2-nightly**.
 
-The Halloween `SECURITY ???` door and Broken Lands terminal are part of the main
-game in `halloween_update.py`. They do not load or depend on NuttyMod.
+## CPELoader unlock is required
 
-## Current behavior
+NuttyMod refuses to start unless all three CPELoader components are installed
+and the game's real CPELoader state is unlocked:
 
-- NuttyMod does not start automatically with the game.
-- NuttyMod cannot rewrite the main game: Permanent Install is disabled in the
-  isolated feature layer and refuses before changing any files.
-- The legacy uninstall and backup code remains available only to recover a game
-  that used an older NuttyMod Permanent Install.
-- The installer removes old top-level NuttyMod files during an upgrade so they
-  cannot remain in the game's normal add-on scan path.
+- `cpeloader.py`
+- `cpeloader_core_runtime.js`
+- `cpeloader_core.rb`
 
-## Isolated files
+Open the game, press **Ctrl+A**, and then press **Y** to unlock CPELoader. The
+loader validates `cpeloader_state.json` through the game's own `CPELoader`
+implementation. It does not create, fake, or bypass an unlock.
 
-The preserved files include the Python and Ruby loaders, optional Java profiles,
-the local health service, connection helpers, and update configuration. Generated
-connection files and recovery data stay below this folder:
+## Stable and Beta channels
 
-- `nuttymod_bootstrap/`: Node.js, Go, PowerShell, HTML, and Electron helpers
-- `addons/`: optional Fun Mode and Physics3D Python/Ruby pairs. They stay
-  together for companion-file lookup and are not scanned by the base game.
-- `update_backups/`: connection-repair and legacy recovery backups
-- `.nuttymod_state.json`: local loader state, if NuttyMod is manually run
-- `.nuttymod_disabled.json`: local disabled add-on state
-- `.nuttymod_update_state.json`: local update-channel state
-- `.nuttymod_permanent_install.json`: legacy transaction recovery manifest
-- `.nuttymod_connection_state.json`: last local connection state
+- Stable selects NuttyMod **1.4.5**.
+- Beta selects NuttyMod **1.5.0-beta**.
+- Channel selection is stored in
+  `addons/nuttymod/.nuttymod_update_state.json`.
+- Restart the game after changing channels.
 
-Local connection listeners bind only to `127.0.0.1`. Local account information,
-if the preserved connection flow is manually used, remains under
+Changing channels only updates the isolated NuttyMod state and profile JARs.
+It never replaces `cube_core.py`, `cpeloader.py`, or another Halloween game
+file. CPELoader's in-game update restrictions remain active; use a trusted,
+signed external installer for game-core or loader-file updates.
+
+## Isolation and compatibility
+
+NuttyMod stays below `addons/nuttymod`. The base add-on manager scans only
+files directly inside `addons`, so it does not automatically execute this
+loader or the optional packs in `addons/nuttymod/addons`.
+
+Permanent Install is disabled for the Halloween Update. The legacy backup and
+uninstall routines remain only for recovery from older NuttyMod installations.
+The Halloween `SECURITY ???` door and Broken Lands terminal continue to belong
+to the main game in `halloween_update.py` and do not depend on NuttyMod.
+
+The preserved loader recognizes `.py`, `.rb`, `.bat`, `.batch`, `.cs`, `.c#`,
+and `.jar` add-ons. Java profiles can be inspected without executing Java.
+The optional local connection helper supports Node.js 22 or newer; Go is only
+needed to rebuild its local authentication helper.
+
+Generated connection data, disabled-addon state, channel state, and recovery
+backups remain inside this isolated folder. Local listeners bind only to
+`127.0.0.1`, and local account information remains below
 `%LOCALAPPDATA%\NuttyMod`.
-
-## Manual compatibility notes
-
-NuttyMod's legacy loader recognizes `.py`, `.rb`, `.bat`, `.cs`, `.c#`, and
-`.jar` add-ons. Java profiles require Java when executed; the included JARs have
-embedded manifests that can be inspected without executing them. Some connection
-helpers require Node.js 22 or newer, while Go is needed only to rebuild the local
-authentication helper.
-
-This folder is intentionally not a normal gameplay add-on. Moving its files back
-to the top level of `addons` would make them eligible for automatic discovery and
-undo the isolation provided by this update.

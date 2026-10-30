@@ -23,8 +23,8 @@ from cpe import physics_backend as pymunk
 from cpe import CPEBridgeRuntime, CubePhysicsEngine, NumericCommand
 
 
-APP_TITLE = "The Cube Beta Halloween Update"
-VERSION = "6.4.1"
+APP_TITLE = "The Cube Beta Halloween Nightly"
+VERSION = "6.4.2-nightly"
 WIDTH, HEIGHT = 1100, 720
 FLOOR_Y = HEIGHT - 54
 FPS = 60
@@ -82,6 +82,18 @@ THEMES = {
         "sand": (66, 45, 38),
         "sun": (238, 214, 174),
     },
+    "aurora": {
+        "sky_top": (8, 31, 44), "sky_bottom": (39, 96, 96),
+        "water": (32, 69, 83), "sand": (21, 42, 51), "sun": (114, 237, 201),
+    },
+    "midnight": {
+        "sky_top": (14, 23, 48), "sky_bottom": (47, 55, 102),
+        "water": (29, 42, 74), "sand": (20, 28, 49), "sun": (148, 172, 255),
+    },
+    "rose": {
+        "sky_top": (43, 22, 46), "sky_bottom": (124, 63, 97),
+        "water": (77, 45, 78), "sand": (41, 26, 43), "sun": (255, 167, 202),
+    },
 }
 
 DEFAULT_SETTINGS = {
@@ -91,6 +103,7 @@ DEFAULT_SETTINGS = {
     "music": True,
     "sound": True,
     "event_interval": 18,
+    "fluent_ui_seen": False,
 }
 
 

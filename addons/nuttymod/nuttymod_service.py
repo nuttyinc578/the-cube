@@ -13,7 +13,14 @@ from typing import Any
 
 
 SERVICE_NAME = "NuttyMod Service"
-SERVICE_VERSION = "1.4.2"
+SERVICE_VERSION = "1.4.5"
+BETA_SERVICE_VERSION = "1.5.0-beta"
+SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly")
+CPELOADER_COMPONENTS = (
+    "cpeloader.py",
+    "cpeloader_core_runtime.js",
+    "cpeloader_core.rb",
+)
 PROFILE_JARS = (
     "nuttymod_loader_patch.jar",
     "nuttymod_root_mode_profile.jar",
@@ -58,9 +65,26 @@ def health_report(game_root: Path | None = None) -> dict[str, Any]:
         name: (isolated / name).is_file() or (root / name).is_file() or (addons / name).is_file()
         for name in PROFILE_JARS
     }
+    update_state = _read_json(isolated / ".nuttymod_update_state.json")
+    beta = str(update_state.get("channel", "stable")).casefold() == "beta"
+    selected_version = BETA_SERVICE_VERSION if beta else SERVICE_VERSION
+    cpeloader_state = _read_json(root / "cpeloader_state.json")
+    component_state = cpeloader_state.get("components", {})
+    cpeloader_unlocked = (
+        cpeloader_state.get("unlocked") is True
+        and isinstance(component_state, dict)
+        and all(
+            component_state.get(name) is True and (root / name).is_file()
+            for name in CPELOADER_COMPONENTS
+        )
+    )
     return {
         "service": SERVICE_NAME,
-        "version": SERVICE_VERSION,
+        "version": selected_version,
+        "stable_version": SERVICE_VERSION,
+        "beta_version": BETA_SERVICE_VERSION,
+        "supported_game_versions": list(SUPPORTED_GAME_VERSIONS),
+        "channel": "beta" if beta else "stable",
         "game_root": str(root),
         "source_root": str(source_root),
         "permanent_install": permanent,
@@ -68,7 +92,12 @@ def health_report(game_root: Path | None = None) -> dict[str, Any]:
         "nuttymod_core": (source_root / "nuttymod_core.py").is_file(),
         "nuttymod_cube_core": (source_root / "nuttymod_cube_core.py").is_file(),
         "profile_jars": jars,
-        "healthy": all(jars.values()) and (not permanent or (cube_removed and core_ready)),
+        "cpeloader_unlocked": cpeloader_unlocked,
+        "healthy": (
+            all(jars.values())
+            and cpeloader_unlocked
+            and (not permanent or (cube_removed and core_ready))
+        ),
     }
 
 
@@ -78,7 +107,7 @@ def register(api: Any) -> None:
         version=SERVICE_VERSION,
         author="NuttyMod Studios",
         description=(
-            "Local Root Mode health and Permanent Install status service; "
-            "not an operating-system service."
+            "Local Halloween compatibility, CPELoader unlock, and isolated "
+            "Root Mode health service; not an operating-system service."
         ),
     )

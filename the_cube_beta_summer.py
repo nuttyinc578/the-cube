@@ -1,4 +1,4 @@
-"""The Cube Beta 6.4.1 - Halloween Update, powered by CPE and IPE."""
+"""The Cube Beta 6.4.2 nightly - Fluent Halloween, powered by CPE and IPE."""
 
 from __future__ import annotations
 
@@ -1187,11 +1187,20 @@ from halloween_update import install_halloween_update
 install_experience_ui(GameApp, Button)
 install_error_update(GameApp, Button)
 install_halloween_update(GameApp, Button)
+from nightly_ui import install_nightly_ui
+install_nightly_ui(GameApp)
 from cpeloader_ui import install_cpeloader_ui, LoaderReset
 install_cpeloader_ui(GameApp)
 
 
 def main() -> None:
+    if '--nightly-self-test' in sys.argv:
+        from nightly_smoke import run
+        index = sys.argv.index('--nightly-self-test')
+        if len(sys.argv) <= index + 1:
+            raise SystemExit('An explicit QA report path is required.')
+        run(sys.argv[index + 1])
+        return
     if '--release-smoke-test' in sys.argv:
         # Exercise the frozen game's actual imports, SDL, assets and physics
         # without opening licence prompts, downloading music or writing settings.

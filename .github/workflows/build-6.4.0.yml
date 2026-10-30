@@ -2,7 +2,6 @@ name: Build The Cube Beta 6.4.0
 
 on:
   push:
-    branches: [main]
     tags: [6.4.0]
   workflow_dispatch:
 

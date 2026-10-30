@@ -1,5 +1,10 @@
 {
   "stable_manifest_url": "",
   "beta_manifest_url": "",
-  "instructions": "Add trusted HTTPS manifest URLs. Every downloaded file must include a SHA-256 hash and an allowed target."
+  "stable_version": "1.4.5",
+  "beta_version": "1.5.0-beta",
+  "supported_game_versions": ["6.4.0", "6.4.1", "6.4.2-nightly"],
+  "cpeloader_unlock_required": true,
+  "external_installer_required": true,
+  "instructions": "CPELoader must be unlocked. Use trusted signed external installers; every downloaded file must include a SHA-256 hash and an allowed isolated target."
 }

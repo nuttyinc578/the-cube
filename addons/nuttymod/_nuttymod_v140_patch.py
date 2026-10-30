@@ -1,4 +1,4 @@
-"""Readable NuttyMod 1.4.2 connection and permanent-install layer."""
+"""Readable NuttyMod 1.4.5 / 1.5.0-beta Halloween compatibility layer."""
 
 from __future__ import annotations
 
@@ -15,10 +15,13 @@ from typing import Any, Callable
 import zipfile
 
 
-PATCH_VERSION = "1.4.2"
-GAME_EDITION = "6.2"
-GAME_VERSION = "6.2.0"
-TERMS_VERSION = "2026-08-26-account-settings-v142"
+STABLE_LOADER_VERSION = "1.4.5"
+BETA_LOADER_VERSION = "1.5.0-beta"
+SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly")
+PATCH_VERSION = STABLE_LOADER_VERSION
+GAME_EDITION = "Halloween Update"
+GAME_VERSION = "6.4.1"
+TERMS_VERSION = "2026-10-26-halloween-cpeloader-v145"
 PERMANENT_STATE_NAME = ".nuttymod_permanent_install.json"
 RUNTIME_NAME = "nuttymod_runtime_v122.pyc"
 PATCH_NAME = "_nuttymod_v140_patch.py"
@@ -30,7 +33,21 @@ CONNECTION_SECONDS = 120.0
 ISOLATED_MODE = True
 
 PERMANENT_INSTALL_SECONDS = 60.0
-SUPPORTED_PERMANENT_VERSIONS = {"1.3.0", "1.4.0", "1.4.1", PATCH_VERSION}
+SUPPORTED_PERMANENT_VERSIONS = {
+    "1.3.0",
+    "1.4.0",
+    "1.4.1",
+    "1.4.2",
+    "1.4.3",
+    "1.4.4",
+    STABLE_LOADER_VERSION,
+    BETA_LOADER_VERSION,
+}
+CPELOADER_COMPONENTS = (
+    "cpeloader.py",
+    "cpeloader_core_runtime.js",
+    "cpeloader_core.rb",
+)
 
 _RUNTIME: dict[str, Any] = {}
 _LEGACY_LOADING_SCREEN: Callable[[Any], bool] | None = None
@@ -56,6 +73,11 @@ _STABLE_MOD_TEXT = {
     "Experimental Ruby, C#, and .batch Mods live in addons/mods.":
         "Stable Ruby, C#, and .batch Mods live in addons/mods.",
     " experimental Mods": " stable Mods",
+    "STABLE  |  RESTORE CUBE_CORE": "STABLE  |  NUTTYMOD 1.4.5",
+    "BETA  |  INSTALL SPLIT CORE": "BETA  |  NUTTYMOD 1.5.0",
+    "DOWNLOAD & INSTALL UPDATE": "EXTERNAL UPDATE INSTALLER",
+    "Beta requires confirmation before rewriting Cube and NuttyMod core files.":
+        "Beta changes only isolated NuttyMod files; Halloween game core stays untouched.",
 }
 
 
@@ -100,12 +122,157 @@ def _loader_dir() -> Path:
     return Path(__file__).resolve().parent
 
 
+def _game_root() -> Path:
+    loader_root = _loader_dir()
+    runtime_root = _RUNTIME.get("_NUTTYMOD_GAME_ROOT") if _RUNTIME else None
+    candidates = [Path(runtime_root)] if runtime_root else []
+    candidates.extend((loader_root, *loader_root.parents))
+    for candidate in candidates:
+        if (candidate / "cube_core.py").is_file() and (
+            candidate / "cpeloader.py"
+        ).is_file():
+            return candidate.resolve()
+    raise RuntimeError(
+        "NuttyMod could not find a complete Halloween game with CPELoader."
+    )
+
+
+def _detected_game_version(root: Path | None = None) -> str:
+    if root is None and _RUNTIME.get("_NUTTYMOD_GAME_VERSION"):
+        return str(_RUNTIME["_NUTTYMOD_GAME_VERSION"])
+    game_root = _game_root() if root is None else Path(root).resolve()
+    try:
+        source = (game_root / "cube_core.py").read_text(encoding="utf-8-sig")
+    except OSError as exc:
+        raise RuntimeError(f"NuttyMod could not read cube_core.py: {exc}") from exc
+    match = re.search(r'^VERSION\s*=\s*["\']([^"\']+)["\']', source, re.MULTILINE)
+    if not match:
+        raise RuntimeError("NuttyMod could not identify the Halloween game version.")
+    return match.group(1)
+
+
+def _require_supported_game(root: Path | None = None) -> str:
+    version = _detected_game_version(root)
+    if version not in SUPPORTED_GAME_VERSIONS:
+        raise RuntimeError(
+            f"The Cube Beta {version} is unsupported. Expected one of: "
+            + ", ".join(SUPPORTED_GAME_VERSIONS)
+        )
+    return version
+
+
+def _cpeloader(root: Path | None = None) -> Any:
+    game_root = _game_root() if root is None else Path(root).resolve()
+    missing = [
+        name for name in CPELOADER_COMPONENTS if not (game_root / name).is_file()
+    ]
+    if missing:
+        raise RuntimeError(
+            "CPELoader is incomplete. Reinstall the game; missing: "
+            + ", ".join(missing)
+        )
+    path = game_root / "cpeloader.py"
+    spec = importlib.util.spec_from_file_location("_nuttymod_cpeloader_patch", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("NuttyMod could not open cpeloader.py.")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.CPELoader(game_root)
+
+
+def _require_cpeloader_unlock(root: Path | None = None) -> Any:
+    loader = _cpeloader(root)
+    loader.require_flash()
+    return loader
+
+
 def _read_json(path: Path, default: Any) -> Any:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return default
     return value
+
+
+def _update_state_path() -> Path:
+    return _loader_dir() / ".nuttymod_update_state.json"
+
+
+def _read_isolated_update_state() -> dict[str, Any]:
+    value = _read_json(_update_state_path(), {})
+    return value if isinstance(value, dict) else {}
+
+
+def _selected_channel() -> str:
+    channel = str(_read_isolated_update_state().get("channel", "stable"))
+    return "beta" if channel.casefold() == "beta" else "stable"
+
+
+def _current_loader_version() -> str:
+    return BETA_LOADER_VERSION if _selected_channel() == "beta" else STABLE_LOADER_VERSION
+
+
+def _save_isolated_update_state(**changes: Any) -> dict[str, Any]:
+    state = _read_isolated_update_state()
+    state.update(changes)
+    state["channel"] = "beta" if str(state.get("channel", "stable")).casefold() == "beta" else "stable"
+    state["loader_version"] = (
+        BETA_LOADER_VERSION if state["channel"] == "beta" else STABLE_LOADER_VERSION
+    )
+    state["game_version"] = _require_supported_game()
+    state["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    _atomic_json(_update_state_path(), state)
+    return state
+
+
+def _set_isolated_update_channel(channel: str) -> str:
+    global PATCH_VERSION
+    selected = "beta" if str(channel).casefold() == "beta" else "stable"
+    _require_cpeloader_unlock()
+    state = _save_isolated_update_state(channel=selected)
+    PATCH_VERSION = str(state["loader_version"])
+    if _RUNTIME:
+        _RUNTIME["LOADER_VERSION"] = PATCH_VERSION
+    _ensure_profile_assets()
+    return selected
+
+
+def _install_isolated_beta() -> tuple[bool, str]:
+    try:
+        _set_isolated_update_channel("beta")
+    except (OSError, PermissionError, RuntimeError, ValueError) as exc:
+        return False, f"NuttyMod Beta was not enabled: {exc}"
+    return True, (
+        f"NuttyMod {BETA_LOADER_VERSION} Beta is selected. No game core files "
+        "were rewritten. Restart the game to finish switching channels."
+    )
+
+
+def _restore_isolated_stable() -> tuple[bool, str]:
+    try:
+        _set_isolated_update_channel("stable")
+    except (OSError, PermissionError, RuntimeError, ValueError) as exc:
+        return False, f"NuttyMod Stable was not enabled: {exc}"
+    return True, (
+        f"NuttyMod {STABLE_LOADER_VERSION} Stable is selected. No game core "
+        "files were rewritten. Restart the game to finish switching channels."
+    )
+
+
+def _isolated_beta_selected() -> bool:
+    return _selected_channel() == "beta"
+
+
+def _blocked_in_game_update() -> tuple[bool, str]:
+    try:
+        loader = _require_cpeloader_unlock()
+        loader.require_in_game_update()
+    except (OSError, PermissionError, RuntimeError, ValueError) as exc:
+        return False, str(exc)
+    return False, (
+        "Use the signed external Halloween installer for loader file updates. "
+        "NuttyMod will not rewrite the game core from inside the game."
+    )
 
 
 def _atomic_write(path: Path, data: bytes) -> None:
@@ -161,6 +328,9 @@ def _jar_manifest(name: str, description: str) -> dict[str, Any]:
         "events": [],
         "nuttymod_profile": True,
         "game_edition": GAME_EDITION,
+        "supported_game_versions": list(SUPPORTED_GAME_VERSIONS),
+        "cpeloader_unlock_required": True,
+        "isolated_mode": ISOLATED_MODE,
     }
 
 
@@ -197,13 +367,13 @@ def _profile_assets() -> dict[str, bytes]:
         PATCH_JAR_NAME: _jar_bytes(
             _jar_manifest(
                 "NuttyMod Loader Patch",
-                "NuttyMod 1.4.2 loader profile with Node.js 22+ local connection support.",
+                f"NuttyMod {PATCH_VERSION} Halloween loader profile with CPELoader unlock.",
             )
         ),
         PROFILE_JAR_NAME: _jar_bytes(
             _jar_manifest(
                 "NuttyMod Root Mode Profile",
-                "Root Mode profile for The Cube Beta Fall Edition 6.2.",
+                "Isolated Root Mode profile for The Cube Beta Halloween Update.",
             )
         ),
     }
@@ -314,7 +484,7 @@ def _quick_verification_screen(app: Any) -> bool:
     stages = [
         ("VERIFYING ADD-ONS", "Checking manifests and SHA-256 fingerprints"),
         ("ROOTING GAME", "Activating the local NuttyMod profile"),
-        ("UPGRADING MODIFIED MENU", f"Fall Edition {GAME_EDITION} controls ready"),
+        ("UPGRADING MODIFIED MENU", f"{GAME_EDITION} controls ready"),
         ("READY", "Root Mode verification complete"),
     ]
 
@@ -347,7 +517,7 @@ def _quick_verification_screen(app: Any) -> bool:
         app.draw_panel(panel, 247)
 
         badge = app.small.render(
-            f"NUTTYMOD {PATCH_VERSION}  /  FALL EDITION {GAME_EDITION}",
+            f"NUTTYMOD {PATCH_VERSION}  /  {GAME_EDITION.upper()}",
             True,
             navy,
         )
@@ -1216,7 +1386,7 @@ def _timed_permanent_install_screen(
         (0.35, "INSTALLING SERVICE", "Adding nuttymod_service.py beside the game"),
         (0.58, "INSTALLING PROFILE JARS", "Copying both JARs into the game folder"),
         (0.78, "VERIFYING FILES", "Checking every installed SHA-256 fingerprint"),
-        (0.94, "FINALISING ROOT MODE", "Preparing the Fall Edition 6.2 menu"),
+        (0.94, "FINALISING ROOT MODE", "Preparing the Halloween Update menu"),
     ]
     while True:
         elapsed = time.monotonic() - started
@@ -1391,6 +1561,39 @@ def _account_settings_menu(app: Any) -> None:
         elif selected == 1:
             return
 
+def _beta_channel_confirmation(app: Any) -> bool:
+    return _confirm(
+        app,
+        "ENABLE NUTTYMOD 1.5.0 BETA?",
+        [
+            "CPELoader must already be unlocked with Ctrl+A, then Y.",
+            "This switches only the isolated NuttyMod loader channel.",
+            "cube_core.py and the Halloween game files will not be rewritten.",
+            "Restart the game after switching to finish the Beta activation.",
+        ],
+        "YES, ENABLE BETA",
+    )
+
+
+def _stable_channel_confirmation(app: Any) -> bool:
+    return _confirm(
+        app,
+        "RETURN TO NUTTYMOD 1.4.5?",
+        [
+            "This switches the isolated loader back to the Stable channel.",
+            "No Cube core or CPELoader component will be replaced.",
+            "Restart the game after switching to finish the Stable activation.",
+        ],
+        "YES, USE STABLE",
+    )
+
+
+def _beta_channel_install_screen(app: Any) -> bool:
+    ok, message = _install_isolated_beta()
+    app.notify(message, 12)
+    return ok
+
+
 def _nuttymod_settings_menu(app: Any) -> None:
     pygame = _RUNTIME["_pygame"]()
     white = _RUNTIME["_color"]("WHITE", (255, 255, 255))
@@ -1415,17 +1618,10 @@ def _nuttymod_settings_menu(app: Any) -> None:
         has_state = isinstance(state, dict) and bool(state)
         state_version = str(state.get("version", "")) if has_state else ""
         installed, permanent_detail = permanent_status()
-        needs_upgrade = has_state and state_version != PATCH_VERSION
-        remove_mode = has_state and not needs_upgrade
-        if needs_upgrade:
-            buttons[2].text = f"UPGRADE PERMANENT INSTALL  |  {PATCH_VERSION}"
-            buttons[2].accent = yellow
-        elif remove_mode:
-            buttons[2].text = "UNINSTALL PERMANENT INSTALL"
-            buttons[2].accent = coral
-        else:
-            buttons[2].text = "PERMANENT INSTALL  |  1 MINUTE"
-            buttons[2].accent = mint
+        needs_upgrade = False
+        remove_mode = False
+        buttons[2].text = "PERMANENT INSTALL DISABLED"
+        buttons[2].accent = muted
 
         events = pygame.event.get()
         if not app.common_events(events):
@@ -1437,31 +1633,23 @@ def _nuttymod_settings_menu(app: Any) -> None:
         app.title_block(
             f"NuttyMod {PATCH_VERSION}",
             "NuttyMod Settings",
-            "Account, updates, verification, and reversible Permanent Install.",
+            "Account, channels, verification, and CPELoader compatibility.",
             70,
         )
         info = pygame.Rect(90, 205, 405, 358)
         app.draw_panel(info, 245)
-        if needs_upgrade:
-            status, status_color = "PERMANENT MODE UPGRADE READY", yellow
-        elif installed:
-            status, status_color = "PERMANENT MODE ACTIVE", mint
-        elif has_state:
-            status, status_color = "PERMANENT MODE NEEDS UNINSTALL", coral
-        else:
-            status, status_color = "SESSION MODE", muted
+        status, status_color = "ISOLATED MODE  /  CPELOADER UNLOCKED", mint
         heading = app.font.render(status, True, status_color)
         app.screen.blit(heading, (126, 242))
         detail_lines = [
-            f"Game: The Cube Beta Fall Edition {GAME_EDITION}",
+            f"Game: The Cube Beta {_detected_game_version()} {GAME_EDITION}",
             f"Loader / Service: NuttyMod {PATCH_VERSION}",
-            permanent_detail,
+            f"Supported: {', '.join(SUPPORTED_GAME_VERSIONS)}",
             "",
-            "The one-minute installer deletes cube_core.py",
-            "after backup, rewrites the launcher to use",
-            "nuttymod_core, and puts both JARs plus",
-            "nuttymod_service.py beside the game files.",
-            "Uninstall restores every verified original.",
+            "Permanent Install stays disabled in Halloween builds.",
+            "Stable/Beta switches only addons/nuttymod state.",
+            "CPELoader controls game updates and integrity.",
+            "Use a signed external installer for core updates.",
         ]
         y = 287
         for text in detail_lines:
@@ -1485,40 +1673,11 @@ def _nuttymod_settings_menu(app: Any) -> None:
             app.addons.reload()
             _RUNTIME["_verification_screen"](app)
         elif selected == 2:
-            if remove_mode:
-                confirmed = _confirm(
-                    app,
-                    "UNINSTALL PERMANENT MODE?",
-                    [
-                        "This restores cube_core.py, the original launcher import, and "
-                        "every other tracked game and loader file from verified backups.",
-                        "Files changed after installation are preserved in update_backups "
-                        "before restoration. Restart and rebuild afterward.",
-                    ],
-                    "YES, UNINSTALL",
-                    danger=True,
-                )
-                if confirmed:
-                    _draw_operation(app, "RESTORING BACKUPS", "Restoring cube_core.py and removing NuttyMod service files")
-                    ok, message = uninstall_permanent()
-                    app.notify(message, 10)
-            else:
-                verb = "UPGRADE" if needs_upgrade else "INSTALL"
-                confirmed = _confirm(
-                    app,
-                    f"{verb} PERMANENT MODE?",
-                    [
-                        "The one-minute installer creates verified backups, rewrites "
-                        "the game launcher to import nuttymod_core, and removes cube_core.py.",
-                        "It installs nuttymod_service.py and both NuttyMod profile JARs "
-                        "beside the game files and in source add-ons.",
-                        "A failed transaction restores the previous permanent or Stable layout.",
-                    ],
-                    f"YES, {verb}",
-                )
-                if confirmed:
-                    ok, message = _timed_permanent_install_screen(app, install_permanent)
-                    app.notify(message, 12)
+            app.notify(
+                "Permanent Install is disabled for the Halloween Update; "
+                "the isolated loader never rewrites cube_core.py.",
+                10,
+            )
         elif selected == 3:
             _account_settings_menu(app)
         elif selected == 4:
@@ -1592,7 +1751,9 @@ def _modified_main_menu(app: Any) -> str:
         app.screen.blit(badge, badge.get_rect(center=badge_rect.center))
 
         title_a = app.large.render("THE CUBE BETA", True, white)
-        title_b = app.large.render(f"FALL EDITION {GAME_EDITION}", True, white)
+        title_b = app.large.render(
+            f"HALLOWEEN UPDATE {_detected_game_version()}", True, white
+        )
         app.screen.blit(title_a, title_a.get_rect(center=(width // 2, 91)))
         app.screen.blit(title_b, title_b.get_rect(center=(width // 2, 137)))
         below = app.small.render(
@@ -1630,9 +1791,9 @@ def _modified_main_menu(app: Any) -> str:
         app.screen.blit(runtime_a, (113, 490))
         app.screen.blit(runtime_b, (305, 490))
         status = app.small.render(
-            "Permanent core verified" if permanent else "Permanent Install available in settings",
+            "CPELoader unlocked  |  isolated core protected",
             True,
-            mint if permanent else muted,
+            mint,
         )
         app.screen.blit(status, (113, 532))
 
@@ -1657,12 +1818,16 @@ def _modified_main_menu(app: Any) -> str:
 
 
 def activate(runtime: dict[str, Any]) -> None:
+    global PATCH_VERSION
     global _RUNTIME
     global _LEGACY_LOADING_SCREEN
     global _LEGACY_SETTINGS_MENU
     global _LEGACY_JAR_RUNNER
 
     _RUNTIME = runtime
+    _require_supported_game()
+    _require_cpeloader_unlock()
+    PATCH_VERSION = _current_loader_version()
     _promote_runtime_mods(runtime)
     _LEGACY_LOADING_SCREEN = runtime["_loading_screen"]
     _LEGACY_SETTINGS_MENU = runtime["_modified_settings_menu"]
@@ -1674,6 +1839,7 @@ def activate(runtime: dict[str, Any]) -> None:
     runtime["CONNECTION_DURATION_SECONDS"] = CONNECTION_SECONDS
     runtime["EXTRA_ADDON_SUFFIXES"] = {
         ".bat",
+        ".batch",
         ".cs",
         ".c#",
         ".jar",
@@ -1682,6 +1848,7 @@ def activate(runtime: dict[str, Any]) -> None:
         ".py",
         ".rb",
         ".bat",
+        ".batch",
         ".cs",
         ".c#",
         ".jar",
@@ -1706,6 +1873,17 @@ def activate(runtime: dict[str, Any]) -> None:
     runtime["_install_permanent"] = install_permanent
     runtime["_uninstall_permanent"] = uninstall_permanent
     runtime["_permanent_status"] = permanent_status
+    runtime["_read_update_state"] = _read_isolated_update_state
+    runtime["_save_update_state"] = _save_isolated_update_state
+    runtime["_set_update_channel"] = _set_isolated_update_channel
+    runtime["_update_channel"] = _selected_channel
+    runtime["_beta_core_installed"] = _isolated_beta_selected
+    runtime["_install_builtin_beta_core"] = _install_isolated_beta
+    runtime["_restore_stable_cube_core"] = _restore_isolated_stable
+    runtime["_download_and_install_update"] = _blocked_in_game_update
+    runtime["_beta_release_confirmation"] = _beta_channel_confirmation
+    runtime["_stable_release_confirmation"] = _stable_channel_confirmation
+    runtime["_beta_release_install_screen"] = _beta_channel_install_screen
 
     _ensure_profile_assets()
     _ensure_game_sidecars()

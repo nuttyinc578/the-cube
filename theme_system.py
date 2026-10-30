@@ -26,8 +26,8 @@ THEMES_NIGHTLY_URL = (
     "The-Cube-Beta-Themes.zip"
 )
 UPDATE_NIGHTLY_URL = (
-    "https://nightly.link/nuttyinc578/the-cube/workflows/build-6.3.0/main/"
-    "The-Cube-Beta-6.3.0-Windows.zip"
+    "https://nightly.link/nuttyinc578/the-cube/workflows/build-nightly/main/"
+    "The-Cube-Beta-6.4.2-nightly-Windows.zip"
 )
 
 THEME_DISCLAIMER = (
@@ -38,7 +38,7 @@ THEME_DISCLAIMER = (
 )
 
 PALETTE_KEYS = ("sky_top", "sky_bottom", "water", "sand", "sun", "accent", "panel")
-BUILTIN_THEME_IDS = {"maple", "harvest", "twilight"}
+BUILTIN_THEME_IDS = {"halloween", "aurora", "midnight", "rose", "maple", "harvest", "twilight"}
 UNSAFE_JAR_SUFFIXES = {
     ".class",
     ".com",
@@ -343,7 +343,7 @@ class ThemeStore:
     @staticmethod
     def default_state() -> dict[str, Any]:
         return {
-            "active_theme": "maple",
+            "active_theme": "halloween",
             "experience": "stable",
             "developer_enabled": False,
             "legacy_profile": None,

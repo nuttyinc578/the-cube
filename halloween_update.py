@@ -7,6 +7,7 @@ import threading
 import time
 from pathlib import Path
 from typing import Any
+from types import MethodType
 
 import pygame
 
@@ -33,6 +34,9 @@ RED = (246, 72, 82)
 def _halloween_init(original: Any):
     def wrapped(app: Any, *args: Any, **kwargs: Any) -> None:
         original(app, *args, **kwargs)
+        # The Error Update initializer installed an instance method; class-level
+        # overrides alone cannot replace it.
+        app.fall_update_screen = MethodType(_halloween_loading_screen, app)
         state_path = app_path() / "halloween_update_state.json"
         if not state_path.exists():
             app.settings["theme"] = "halloween"
@@ -112,6 +116,8 @@ def _music_worker(app: Any) -> None:
 
 
 def _halloween_loading_screen(app: Any) -> bool:
+    from root_mode_runtime import loading_event
+    loading_event(app, 'Halloween loading / music preparing')
     if not app.halloween_music.ready:
         threading.Thread(target=_music_worker, args=(app,), daemon=True).start()
     started = time.monotonic()
@@ -125,6 +131,7 @@ def _halloween_loading_screen(app: Any) -> bool:
                 if event.key == pygame.K_ESCAPE:
                     return False
                 if event.key in {pygame.K_RETURN, pygame.K_SPACE} and (app.halloween_music.ready or app.halloween_music_error or elapsed > 8):
+                    loading_event(app, 'game running; loading complete')
                     return True
                 if event.key == pygame.K_o:
                     app.halloween_music.open_official_page()
@@ -143,7 +150,7 @@ def _halloween_loading_screen(app: Any) -> bool:
         app.screen.blit(veil, (0, 0))
         title = app.hero.render("HALLOWEEN UPDATE", True, ORANGE)
         app.screen.blit(title, title.get_rect(center=(WIDTH // 2, 115)))
-        for index, text in enumerate(("WE ARE DONE", "WE ARE COOKED", "THE BROKEN LANDS ARE CALLING")):
+        for index, text in enumerate(("PUMPKINS / PHYSICS / PARTICLES", "CPE IS WAKING UP", "THE BROKEN LANDS ARE CALLING")):
             label = app.font.render(text, True, (255, 235 - index * 42, 192 - index * 38))
             app.screen.blit(label, label.get_rect(center=(WIDTH // 2, 200 + index * 39)))
         panel = pygame.Rect(150, 355, 800, 220)
@@ -167,7 +174,7 @@ def _halloween_loading_screen(app: Any) -> bool:
             warning = app.tiny.render('WARNING: Modified game files detected after unlocking CPELoader.', True, RED)
             app.screen.blit(warning, warning.get_rect(center=(WIDTH // 2, HEIGHT - 22)))
         elif getattr(app, 'cpeloader', None) and app.cpeloader.unlocked:
-            warning = app.tiny.render('CPELoader unlocked — updates require the external installer.', True, ORANGE)
+            warning = app.tiny.render('CPELoader unlocked — NuttyMod update override enabled.' if app.cpeloader.unlocked_updates_enabled else 'CPELoader unlocked — updates require the external installer.', True, ORANGE)
             app.screen.blit(warning, warning.get_rect(center=(WIDTH // 2, HEIGHT - 22)))
         pygame.display.flip()
         app.clock.tick(FPS)

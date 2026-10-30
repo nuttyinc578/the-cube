@@ -217,6 +217,8 @@ cpe/**/bin/
 cpe/**/obj/
 cpe/java-client/out/
 !summer_build.spec
+!nightly_build.spec
+!addons/nuttymod/nuttymod_runtime_v122.pyc
 
 # The Cube Beta runtime theme state and reversible backups
 settings.json
@@ -232,3 +234,6 @@ og-current-version.json
 og-recovery/
 cpeloader_state.json
 cpeloader_manifest.json
+userdata/
+flash_scripts/
+cpe-flash-profile.json

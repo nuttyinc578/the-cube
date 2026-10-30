@@ -1,6 +1,14 @@
 THE CUBE BETA HALLOWEEN UPDATE
 THIRD-PARTY NOTICES
 
+6.4.2 nightly uses pygame-ce 2.5.8 (LGPL-2.1-or-later), Pymunk 7.3.1
+(MIT), and Python 3.15.2 (PSF License). Original library licences are bundled
+by the packager. pygame-ce is a community-maintained implementation of the
+pygame API; its code is not covered by this game's MIT License.
+Project/source: https://github.com/pygame-community/pygame-ce
+Pymunk source: https://github.com/viblo/pymunk
+Python source: https://www.python.org/downloads/release/python-3152/
+
 Music: "Halloween Music"
 Artist: Sound4Stock
 Source: https://pixabay.com/music/happy-childrens-tunes-halloween-music-609427/

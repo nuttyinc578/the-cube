@@ -8,19 +8,25 @@ import re
 from pathlib import Path
 
 COMPONENTS = ('cpeloader.py', 'cpeloader_core_runtime.js', 'cpeloader_core.rb')
-EXCLUDED_DIRS = {'.git', '.venv', '__pycache__', 'build', 'dist', 'backup', 'backups', 'installer-output', 'package-staging', 'release-download', 'legacy-versions', 'og-recovery', 'node_modules', 'bin', 'obj', 'inbox', 'publish-work'}
+EXCLUDED_DIRS = {'.git', '.venv', '.pytest_cache', '__pycache__', 'build', 'dist', 'backup', 'backups', 'installer-output', 'package-staging', 'release-download', 'legacy-versions', 'og-recovery', 'node_modules', 'obj', 'inbox', 'publish-work'}
+EXCLUDED_DIRS.add('userdata')  # Player data changes are not executable modifications.
 MUTABLE = {'settings.json', 'halloween_update_state.json', 'error_update_state.json', 'og-current-version.json', 'cpeloader_state.json', 'cpeloader_manifest.json', 'halloween_music.mp3', 'fall_music.mp3'}
+MUTABLE.update({'.theme_state.json', '.cpe_channel.json', '.nuttymod_state.json', '.nuttymod_disabled.json', '.nuttymod_update_state.json', '.nuttymod_connection_state.json', '.nuttymod_compatibility_state.json', '.nuttymod_account_state.json'})
 
 
 def snapshot(root: Path) -> dict[str, str]:
     result = {}
     for folder, directories, files in os.walk(root):
-        directories[:] = sorted(name for name in directories if name not in EXCLUDED_DIRS and not name.startswith('.') and not (Path(folder)/name).is_symlink())
+        directories[:] = sorted(name for name in directories if name not in EXCLUDED_DIRS)
         for name in sorted(files):
             path = Path(folder)/name
-            if name.startswith('.') or name in MUTABLE or path.is_symlink(): continue
+            if name in MUTABLE: continue
+            if path.is_symlink():
+                result[path.relative_to(root).as_posix()] = 'symbolic-link'
+                continue
             if re.fullmatch(r'unins\d+\.(exe|dat|msg)', name, re.IGNORECASE): continue
-            if path.suffix in {'.pyc', '.log', '.writing', '.tmp'}: continue
+            if path.suffix == '.pyc' and name != 'nuttymod_runtime_v122.pyc': continue
+            if path.suffix in {'.log', '.writing', '.tmp'}: continue
             try: digest = hashlib.sha256(path.read_bytes()).hexdigest()
             except OSError: digest = 'unreadable'
             result[path.relative_to(root).as_posix()] = digest
@@ -60,12 +66,14 @@ class CPELoader:
     def changes(self) -> list[str]:
         state = self.state()
         if state.get('state_error'): return ['cpeloader_state.json (unreadable)']
-        baseline = state.get('baseline') if state.get('unlocked') is True else None
+        baseline = None
         manifest = self.root/'cpeloader_manifest.json'
-        if baseline is None and manifest.exists():
+        if manifest.exists():
             try: baseline = json.loads(manifest.read_text(encoding='utf-8'))['files']
-            except (ValueError, KeyError, OSError): return ['cpeloader_manifest.json (unreadable)']
-        if baseline is None: return []
+            except (ValueError, TypeError, KeyError, OSError): return ['cpeloader_manifest.json (unreadable)']
+        else:
+            baseline = state.get('baseline') if state.get('unlocked') is True else None
+        if baseline is None: return ['cpeloader_manifest.json (missing integrity baseline; reinstall from a complete portable ZIP)']
         if not isinstance(baseline, dict): return ['cpeloader_state.json (invalid baseline)']
         current = snapshot(self.root)
         return sorted(name for name in set(baseline)|set(current) if baseline.get(name) != current.get(name))
@@ -74,8 +82,20 @@ class CPELoader:
         if not self.unlocked:
             raise PermissionError('CPELoader is locked. Open the game, press Ctrl+A, then Y to unlock all three loader components before flashing.')
 
+    @property
+    def unlocked_updates_enabled(self) -> bool:
+        if not self.unlocked: return False
+        try:
+            profile = json.loads((self.root/'cpe-flash-profile.json').read_text(encoding='utf-8'))
+            return (isinstance(profile, dict) and profile.get('schema') == 1
+                    and profile.get('allow_unlocked_updates') is True
+                    and isinstance(profile.get('nuttymod_mods'), list)
+                    and 'cpeloader-unlocked-updates' in profile.get('nuttymod_mods', []))
+        except (ValueError, OSError, TypeError): return False
+
     def require_in_game_update(self) -> None:
-        if self.state().get('unlocked') is True or self.state().get('state_error'):
+        state = self.state()
+        if state.get('state_error') or (state.get('unlocked') is True and not self.unlocked_updates_enabled):
             raise PermissionError('CPELoader is unlocked. Game updates are disabled; use the external installer.')
 
 

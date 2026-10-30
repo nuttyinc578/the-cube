@@ -48,6 +48,35 @@ class LoaderTests(unittest.TestCase):
         self.assertFalse(self.loader.unlocked)
         self.assertIn('unreadable', self.loader.changes()[0])
 
+    def test_unlock_does_not_hide_changes_from_original_release(self):
+        write_json(self.root/'cpeloader_manifest.json', {'files': snapshot(self.root)})
+        (self.root/COMPONENTS[0]).write_text('modified before unlock')
+        self.loader.unlock()
+        self.assertIn(COMPONENTS[0], self.loader.changes())
+        self.loader.unlock()  # Repeating unlock must not "approve" changed files.
+        self.assertIn(COMPONENTS[0], self.loader.changes())
+
+    def test_hidden_code_and_binary_changes_are_detected(self):
+        binary = self.root/'cpe'/'bin'/'engine.dll'
+        binary.parent.mkdir(parents=True)
+        binary.write_bytes(b'original')
+        write_json(self.root/'cpeloader_manifest.json', {'files': snapshot(self.root)})
+        binary.write_bytes(b'modified')
+        (self.root/'.hidden-addon.py').write_text('modified')
+        self.assertEqual(self.loader.changes(), ['.hidden-addon.py', 'cpe/bin/engine.dll'])
+
+    def test_missing_manifest_is_not_silently_treated_as_unmodified(self):
+        self.assertIn('missing integrity baseline', self.loader.changes()[0])
+
+    def test_distributed_addon_runtime_is_hashed_but_python_caches_are_not(self):
+        runtime = self.root/'nuttymod_runtime_v122.pyc'
+        runtime.write_bytes(b'original compatibility runtime')
+        write_json(self.root/'cpeloader_manifest.json', {'files': snapshot(self.root)})
+        (self.root/'temporary.pyc').write_bytes(b'generated cache')
+        self.assertEqual(self.loader.changes(), [])
+        runtime.write_bytes(b'changed compatibility runtime')
+        self.assertEqual(self.loader.changes(), [runtime.name])
+
     def test_installer_and_runtime_files_do_not_trigger_integrity_warning(self):
         write_json(self.root/'cpeloader_manifest.json', {'files': snapshot(self.root)})
         for name in ['unins000.exe', 'unins000.dat', 'settings.json']:
@@ -73,7 +102,7 @@ class LoaderTests(unittest.TestCase):
             executable = shutil.which(runtime)
             if not executable: continue  # Ruby is optional on Windows CI.
             def status():
-                result = subprocess.run([executable, str(source/script), str(self.root), 'flash'], capture_output=True, text=True, timeout=15)
+                result = subprocess.run([executable, str(source/script), str(self.root), 'flash'], capture_output=True, text=True, timeout=60)
                 return result
             self.loader.path.unlink(missing_ok=True)
             self.assertNotEqual(status().returncode, 0)

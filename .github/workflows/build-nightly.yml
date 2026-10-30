@@ -1,0 +1,85 @@
+name: Cube Beta 6.4.2-nightly
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-nightly.yml'
+      - 'nightly*'
+      - 'fluent_ui.py'
+      - 'cube_updater.py'
+      - 'cube_core.py'
+      - 'cpeloader*.py'
+      - 'theme_system.py'
+      - 'the_cube_beta_summer.py'
+      - 'requirements-nightly.txt'
+      - 'test_nightly.py'
+      - 'tools/Build-Nightly.py'
+      - 'tools/Verify-Nightly*.py'
+      - 'tools/Package-BaseHalloween.py'
+      - 'installer/TheCubeBetaNightly.iss'
+      - 'addons/**'
+      - 'cpe/**'
+      - 'cpe_rephysics/**'
+      - 'flashed_runtime.py'
+      - 'root_mode*.py'
+      - 'nuttymod_root_support.py'
+      - 'cpeloader_core*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cube-beta-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYGAME_HIDE_SUPPORT_PROMPT: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.15.2'
+          cache: pip
+          cache-dependency-path: requirements-nightly.txt
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1
+        with:
+          ruby-version: '3.3'
+      - name: Install pinned nightly dependencies
+        run: python -m pip install --disable-pip-version-check --only-binary=:all: -r requirements-nightly.txt
+      - name: Verify fallback music
+        shell: pwsh
+        run: ./tools/Get-FallMusic.ps1
+      - name: Install Inno Setup on this disposable runner
+        run: choco install innosetup --no-progress --yes
+      - name: Test, build, smoke-test and package nightly plus installer
+        run: python tools/Build-Nightly.py
+      - name: Verify installer consent, preservation and uninstall
+        run: python tools/Verify-NightlyInstaller.py
+      - name: Verify the exact portable download and both checksums
+        run: python tools/Verify-NightlyArtifacts.py
+      - name: Upload tested nightly.link downloads
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: The-Cube-Beta-6.4.2-nightly-Windows
+          path: build/nightly-download/*
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+      - name: Upload smoke test report and actual UI renders
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Cube-Beta-Nightly-QA
+          path: build/nightly-qa/*
+          if-no-files-found: ignore
+          retention-days: 14

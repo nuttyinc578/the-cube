@@ -6,12 +6,17 @@
 
 require "json"
 
-LOADER_VERSION = "1.0.0"
+LOADER_VERSION = "1.4.5"
+BETA_LOADER_VERSION = "1.5.0-beta"
+SUPPORTED_GAME_VERSIONS = ["6.4.0", "6.4.1", "6.4.2-nightly"].freeze
 
 if ARGV.first == "--loader-info"
   puts JSON.generate(
     component: "NuttyMod Ruby Bridge",
     version: LOADER_VERSION,
+    beta_version: BETA_LOADER_VERSION,
+    supported_game_versions: SUPPORTED_GAME_VERSIONS,
+    cpeloader_unlock_required: true,
     status: "ready",
     ruby_version: RUBY_VERSION,
     platform: RUBY_PLATFORM
@@ -22,6 +27,9 @@ end
 manifest = {
   name: "NuttyMod Ruby Bridge",
   version: LOADER_VERSION,
+  beta_version: BETA_LOADER_VERSION,
+  supported_game_versions: SUPPORTED_GAME_VERSIONS,
+  cpeloader_unlock_required: true,
   author: "nutty'inc",
   description: "Ruby runtime bridge and Root Prism content for NuttyMod Loader.",
   shapes: [
