@@ -64,7 +64,10 @@ def _windows_executable_version(path: Path) -> str | None:
         minor = values[2] & 0xFFFF
         patch = values[3] >> 16
         version = f"{major}.{minor}.{patch}"
-        return version + ("-nightly" if values[6] & values[7] & 0x2 else "")
+        if values[6] & values[7] & 0x2:
+            revision = values[3] & 0xFFFF
+            return version + "-nightly" + (f".{revision}" if revision else "")
+        return version
     except (AttributeError, OSError, ValueError):
         return None
 
