@@ -2,6 +2,7 @@
 from __future__ import annotations
 import importlib.metadata
 import json
+import os
 from pathlib import Path
 import platform
 from types import SimpleNamespace
@@ -14,6 +15,8 @@ from cpeloader_ui import render_unlock, render_loader_warning
 
 
 def run(report_path):
+    # Self-test mode exits after QA; never contact even a localhost bridge.
+    os.environ['CPE_DISABLE_BRIDGE'] = '1'
     report_path = Path(report_path).resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)
     pygame.init()
