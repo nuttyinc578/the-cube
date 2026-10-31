@@ -85,6 +85,11 @@ def main():
     if CPELoader(folder).changes():
         raise RuntimeError('Packaged integrity manifest does not match the nightly.')
     # Read-only smoke test of the actual packaged cpe.exe.
+    version_check = subprocess.run([str(folder/'cpe.exe'), '-cpeloader', '--v'],
+                                  capture_output=True, text=True, check=True, timeout=30)
+    from cpeloader import LOADER_VERSION
+    if version_check.stdout.strip() != f'CPELoader v{LOADER_VERSION}':
+        raise RuntimeError('Packaged CPELoader version command returned an unexpected version.')
     run(folder/'cpe.exe', '-connect', folder, '-cpeloader', timeout=30)
     output = ROOT/'build'/'nightly-download'
     output.mkdir(exist_ok=True)

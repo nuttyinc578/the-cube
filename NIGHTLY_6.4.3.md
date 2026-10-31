@@ -1,6 +1,15 @@
-# The Cube Beta 6.4.3-nightly — Christmas Workshop
+# The Cube Beta 6.4.3-nightly.2 — Christmas Workshop
 
 Experimental Christmas build. **6.4.2 remains the stable release.**
+
+## Changes in nightly.2
+
+- Added `cpe -cpeloader --v` (or `--version`) to print `CPELoader v2` without connecting to a game folder or changing files. Combining version mode with `-LOCK` is rejected.
+- Rebuilt both the Windows installer and portable ZIP; the build verifies the version command in the packaged `cpe.exe`.
+- The updater now understands numbered nightly revisions and does not downgrade or repeat the current version. Older builds do not recognize numbered nightlies: download this installer or portable ZIP directly from GitHub.
+- The previous `6.4.3-nightly` release and stable `6.4.2` downloads remain available unchanged.
+
+## Christmas features
 
 - Snowy Christmas theme enabled on first launch, winter scenery, Santa cube icon and Snow Globe, Gift Shower and Sleigh Breeze events. Your later theme choice is remembered; Halloween and the other built-ins remain available.
 - **CPE 0.0.3-nightly**: immutable bounded JSON cache snapshots, SHA-256 checks before publication, Node-to-Go payload checksums and coherent Go cache versions.
@@ -19,6 +28,7 @@ Open **Open CPE Command Prompt.cmd** in the game folder:
 
 ```bat
 cpe -connect "C:\Games\The Cube Beta" -LOCK -cpeloader
+cpe -cpeloader --v
 ```
 
 The `-"C:\Games\The Cube Beta"` spelling is also accepted. Omit `-LOCK` for read-only status. No global PATH changes are made. See CPELOADER_V2.md for details.

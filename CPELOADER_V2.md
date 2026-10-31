@@ -10,6 +10,14 @@ The originally requested `cpe -connect -"C:\Games\The Cube Beta" -LOCK -cpeloade
 
 Source checkout: `python cpeloader_cli.py -connect "." -LOCK -cpeloader`.
 
+Show the version bundled with the command:
+
+```bat
+cpe -cpeloader --v
+```
+
+This prints `CPELoader v2`. `--version` is an alias. No game folder is required, and no game files or lock states are read or changed. If `-connect` is supplied, version mode still reports this command's bundled version, not the selected folder's loader. Version mode cannot be combined with `-LOCK`.
+
 Locking disables flashing for the Python, Node.js and Ruby components. It does **not** remove mods, rewrite game code, delete backups, regenerate an integrity baseline or certify a modified game as official. Existing warnings stay visible. The official updater refuses modified, unlocked, partially unlocked and custom games.
 
 ## Fast CPE

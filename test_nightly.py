@@ -56,6 +56,17 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual(result[0].version, '6.5.0')
         self.assertTrue(result[0].installer)
 
+    def test_numbered_nightlies_sort_without_downgrades(self):
+        versions = ['6.4.3-nightly', '6.4.3-nightly.2', '6.4.3-nightly.10', '6.4.3']
+        self.assertEqual(sorted(reversed(versions), key=version_key), versions)
+        result = parse_updates([release(version=v) for v in versions], '6.4.3-nightly.2')
+        self.assertEqual([item.version for item in result], ['6.4.3', '6.4.3-nightly.10'])
+        self.assertEqual(version_key('v6.4.3-nightly.2'), version_key('6.4.3-nightly.2'))
+        for invalid in ('6.4.3.2', '6.4.3-nightly.', '6.4.3-nightly.0', '6.4.3-nightly.02',
+                        '6.4.3-nightly.-2', '6.4.3-nightly.2/extra'):
+            with self.subTest(version=invalid), self.assertRaises(ValueError):
+                version_key(invalid)
+
     def test_draft_and_missing_checksum_are_not_updates(self):
         draft = release(); draft['draft'] = True
         missing = release(); missing['assets'][0]['digest'] = None

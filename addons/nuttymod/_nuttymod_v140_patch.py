@@ -17,7 +17,7 @@ import zipfile
 
 STABLE_LOADER_VERSION = "1.4.5"
 BETA_LOADER_VERSION = "1.5.0-beta"
-SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly", "6.4.2", "6.4.3-nightly")
+SUPPORTED_GAME_VERSIONS = ("6.4.0", "6.4.1", "6.4.2-nightly", "6.4.2", "6.4.3-nightly", "6.4.3-nightly.2")
 PATCH_VERSION = STABLE_LOADER_VERSION
 GAME_EDITION = "Halloween Update"
 GAME_VERSION = "6.4.1"

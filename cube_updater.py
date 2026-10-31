@@ -30,10 +30,10 @@ class Update:
 
 
 def version_key(value):
-    match = re.fullmatch(r'v?(\d+)\.(\d+)\.(\d+)(-nightly)?', value)
+    match = re.fullmatch(r'v?(\d+)\.(\d+)\.(\d+)(-nightly(?:\.([1-9]\d{0,8}))?)?', value)
     if not match:
         raise ValueError('Unsupported release version.')
-    return (*(int(match[i]) for i in (1, 2, 3)), 0 if match[4] else 1)
+    return (*(int(match[i]) for i in (1, 2, 3)), 0 if match[4] else 1, int(match[5] or 0))
 
 
 def parse_updates(payload, current):

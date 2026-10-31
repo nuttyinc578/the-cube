@@ -144,6 +144,36 @@ class LoaderV2Tests(unittest.TestCase):
         self.assertEqual(self.loader.changes(), [])
         CubeUpdater(self.root, '6.4.3-nightly').require_update()
 
+    def test_version_flags_do_not_connect_or_change_files(self):
+        before = (self.root/'cpeloader_state.json').read_bytes()
+        commands = [
+            ['-cpeloader', '--v'],
+            ['--version', '-cpeloader'],
+            ['-connect', str(self.root/'missing'), '-cpeloader', '--v'],
+        ]
+        for command in commands:
+            with self.subTest(command=command), contextlib.redirect_stdout(io.StringIO()) as output:
+                with patch('cpeloader_cli.CPELoader') as loader, patch('cpeloader_cli.Path.resolve') as resolve:
+                    self.assertEqual(main(command), 0)
+                    loader.assert_not_called()
+                    resolve.assert_not_called()
+                self.assertEqual(output.getvalue().strip(), 'CPELoader v2')
+        self.assertEqual((self.root/'cpeloader_state.json').read_bytes(), before)
+
+    def test_version_and_lock_are_rejected_without_changing_state(self):
+        before = (self.root/'cpeloader_state.json').read_bytes()
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as result:
+            main(['-connect', str(self.root), '-cpeloader', '--v', '-LOCK'])
+        self.assertEqual(result.exception.code, 2)
+        self.assertEqual((self.root/'cpeloader_state.json').read_bytes(), before)
+
+    def test_status_and_lock_still_require_connection_folder(self):
+        for command in (['-cpeloader'], ['-cpeloader', '-LOCK']):
+            with self.subTest(command=command), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as result:
+                    main(command)
+                self.assertEqual(result.exception.code, 2)
+
     def test_modification_warning_survives_relocking(self):
         (self.root/'game.py').write_text('# my custom cube', encoding='utf-8')
         self.assertIn('game.py', self.loader.lock())
