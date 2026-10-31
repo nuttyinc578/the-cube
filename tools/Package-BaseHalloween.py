@@ -12,17 +12,7 @@ from cpeloader import snapshot, write_json
 from release_info import SEASON
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--build-dir', default='build/halloween-gamelift-game')
-    parser.add_argument('--version', help='Optional release version for the portable filename')
-    parser.add_argument('--exe-name', default='The Cube Beta Halloween Update.exe')
-    args = parser.parse_args()
-    if args.version and not re.fullmatch(r'\d+\.\d+\.\d+(-nightly(?:\.[1-9]\d{0,8})?)?', args.version):
-        raise ValueError('Release version must have three numeric components.')
-    folder = (ROOT/args.build_dir).resolve()
-    if Path(args.exe_name).name != args.exe_name or ROOT not in folder.parents or not (folder/args.exe_name).is_file():
-        raise ValueError('A compiled base game in a repository build subdirectory is required.')
+def stage_payload(folder):
     for name in ('cpeloader.py', 'cpeloader_core_runtime.js', 'cpeloader_core.rb', 'LICENCE.txt',
                  'THIRD_PARTY_NOTICES.txt', 'GAMELIFT_SETUP.md', 'cpe-backend.json'):
         shutil.copy2(ROOT/name, folder/name)
@@ -42,6 +32,27 @@ def main():
     # No local unlock state, cloud credentials, flasher binary or userdata copied.
     write_json(folder/'cpeloader_state.json', {'unlocked': False, 'components': {
         'cpeloader.py': False, 'cpeloader_core_runtime.js': False, 'cpeloader_core.rb': False}})
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--build-dir', default='build/halloween-gamelift-game')
+    parser.add_argument('--version', help='Optional release version for the portable filename')
+    parser.add_argument('--exe-name', default='The Cube Beta Halloween Update.exe')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--stage-only', action='store_true', help='Copy the clean payload before building its recovery image')
+    mode.add_argument('--archive-only', action='store_true', help='Seal and archive the already staged payload')
+    args = parser.parse_args()
+    if args.version and not re.fullmatch(r'\d+\.\d+\.\d+(-nightly(?:\.[1-9]\d{0,8})?)?', args.version):
+        raise ValueError('Release version must have three numeric components.')
+    folder = (ROOT/args.build_dir).resolve()
+    if Path(args.exe_name).name != args.exe_name or ROOT not in folder.parents or not (folder/args.exe_name).is_file():
+        raise ValueError('A compiled base game in a repository build subdirectory is required.')
+    if not args.archive_only:
+        stage_payload(folder)
+    if args.stage_only:
+        print(f'Staged payload: {folder}')
+        return
     write_json(folder/'cpeloader_manifest.json', {'files': snapshot(folder)})
     archive = folder.parent/(f'The-Cube-Beta-{SEASON}-{args.version}-Portable.zip' if args.version
         else 'Cube-Beta-Halloween-GameLift-Prepared-Portable.zip')

@@ -1,8 +1,10 @@
 """Isolated recovery-image, consent, rollback and missing-loader regressions."""
 import contextlib
 import io
+import importlib.util
 import json
 import os
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -146,12 +148,102 @@ class RepairTests(unittest.TestCase):
 
     def test_version_lock_and_repair_options_do_not_mix(self):
         commands = [ ['--cpeloader', '--v', '-cpe/repair'],
+                     ['--cpeloader', '--v', '-fullgame/repair'],
+                     ['--cpeloader', '-LOCK', '-fullgame/repair'],
                      ['--cpeloader', '-LOCK', '-cpeloader/repair'], ['--cpeloader', '--yes'] ]
         for command in commands:
             with self.subTest(command=command), contextlib.redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit) as result:
                     main(command)
                 self.assertEqual(result.exception.code, 2)
+
+    def test_fullgame_refuses_an_older_cpe_only_image(self):
+        with self.assertRaisesRegex(repair.RepairError, 'FULLGAME_IMAGE_MISSING'):
+            self.plan({'cpe', 'cpeloader', 'game'})
+        self.assertFalse((self.game/'backup').exists())
+
+    def full_image(self):
+        for name in ('themes/bundled/theme.json', 'addons/bundled.py', 'LICENCE.txt'):
+            target = self.game/name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(b'official bundled file')
+        (self.game/'cpe.exe').write_bytes(b'the running tool')
+        output = self.base/'full-recovery'
+        repair.build_image(ROOT, self.game, output, full_game=True)
+        self.paths = (output/'image.zip', output/'image.json')
+        self.files, self.payloads = repair.load_image(self.paths, require_full=True)
+        self.assertEqual(set(self.files), set(snapshot(self.game))-{'cpe.exe'})
+        (self.game/'cpeloader_manifest.json').write_text(json.dumps({'files': snapshot(self.game)}))
+        self.manifest = (self.game/'cpeloader_manifest.json').read_bytes()
+
+    def test_fullgame_restores_assets_and_loader_but_preserves_user_files(self):
+        self.full_image()
+        (self.game/'themes/bundled/theme.json').unlink()
+        (self.game/'addons/bundled.py').write_bytes(b'changed bundled add-on')
+        (self.game/'cpeloader.py').unlink()
+        (self.game/'LICENCE.txt').write_bytes(b'damaged licence')
+        (self.game/'userdata').mkdir()
+        (self.game/'userdata/save.json').write_bytes(b'my save')
+        (self.game/'addons/custom.py').write_bytes(b'custom add-on')
+        plan = self.plan({'cpe', 'cpeloader', 'game'})
+        self.assertEqual(set(plan.payloads), {'themes/bundled/theme.json', 'addons/bundled.py', 'cpeloader.py', 'LICENCE.txt'})
+        result = repair.execute_repair(plan)
+        self.assertEqual((Path(result['backup'])/'original/addons/bundled.py').read_bytes(), b'changed bundled add-on')
+        for name in result['restored']:
+            self.assertEqual((self.game/name).read_bytes(), self.payloads[name])
+        for name, data in (('userdata/save.json', b'my save'), ('addons/custom.py', b'custom add-on'),
+                           ('settings.json', b'player settings'), ('cpe.exe', b'the running tool')):
+            self.assertEqual((self.game/name).read_bytes(), data)
+        self.assertEqual((self.game/'cpeloader_state.json').read_bytes(), self.state)
+        self.assertEqual((self.game/'cpeloader_manifest.json').read_bytes(), self.manifest)
+
+    def test_exact_fullgame_console_command_uses_executable_folder(self):
+        self.full_image()
+        (self.game/'LICENCE.txt').unlink()
+        command = ['--cpeloader', '--connect', '-fullgame/repair', '--no-gui']
+        with (patch.object(sys, 'frozen', True, create=True),
+              patch.object(sys, 'executable', str(self.game/'cpe.exe')),
+              patch('cpe_repair.image_paths', return_value=self.paths),
+              patch.dict(sys.modules, {'cpe_repair_ui': None}),
+              contextlib.chdir(self.base), contextlib.redirect_stdout(io.StringIO()) as output):
+            with patch('builtins.input', return_value=''):
+                self.assertEqual(main(command), 2)
+            self.assertFalse((self.game/'LICENCE.txt').exists())
+            self.assertFalse((self.game/'backup').exists())
+            self.assertEqual(main(command+['--yes']), 0)
+            self.assertIn(str(self.game), output.getvalue())
+        self.assertEqual((self.game/'LICENCE.txt').read_bytes(), self.payloads['LICENCE.txt'])
+
+    def test_fullgame_accepts_explicit_folder_and_partial_repairs_ignore_game_assets(self):
+        self.full_image()
+        (self.game/'LICENCE.txt').unlink()
+        self.assertEqual(self.plan({'cpe', 'cpeloader'}).payloads, {})
+        with (patch('cpe_repair.image_paths', return_value=self.paths),
+              patch.dict(sys.modules, {'cpe_repair_ui': None}), contextlib.redirect_stdout(io.StringIO())):
+            self.assertEqual(main(['--cpeloader', '--connect', str(self.game),
+                                   '-fullgame/repair', '--no-gui', '--yes']), 0)
+        self.assertEqual((self.game/'LICENCE.txt').read_bytes(), self.payloads['LICENCE.txt'])
+
+    def test_fullgame_image_covers_the_real_staged_repository_payload(self):
+        spec = importlib.util.spec_from_file_location('cube_package_for_test', ROOT/'tools/Package-BaseHalloween.py')
+        package = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(package)
+        staged = self.base/'staged-release'
+        staged.mkdir()
+        (staged/EXE_NAME).write_bytes(b'compiled game fixture')
+        package.stage_payload(staged)
+        for name in ('Open CPE Command Prompt.cmd', 'CPELOADER_V2.md', repair.NOTES_FILE):
+            (staged/name).write_bytes((ROOT/name).read_bytes())
+        output = self.base/'staged-recovery'
+        repair.build_image(ROOT, staged, output, full_game=True)
+        paths = (output/'image.zip', output/'image.json')
+        files, data = repair.load_image(paths, require_full=True)
+        expected = snapshot(staged)
+        self.assertEqual(set(files), set(expected))
+        self.assertTrue(all(repair.digest(data[name]) == value for name, value in expected.items()))
+        self.assertNotIn('cpeloader_state.json', files)
+        (staged/'cpeloader_manifest.json').write_text(json.dumps({'files': expected}))
+        self.assertEqual(repair.prepare_repair(staged, {'cpe', 'cpeloader', 'game'}, paths).payloads, {})
 
 
 if __name__ == '__main__':

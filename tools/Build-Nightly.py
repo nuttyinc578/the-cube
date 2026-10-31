@@ -52,10 +52,6 @@ def main():
         '--workpath', ROOT/'build'/'nightly-pyinstaller', ROOT/'nightly_build.spec')
     run(sys.executable, '-m', 'unittest',
         'test_nuttymod_isolation.NuttyModIsolationTests.test_portable_build_reads_version_from_executable', '-v')
-    from cpe_repair import build_image
-    build_image(ROOT, folder, ROOT/'build'/'cpe-recovery')
-    run(sys.executable, '-m', 'PyInstaller', '--noconfirm', '--distpath', folder,
-        '--workpath', ROOT/'build'/'cpe-cli-pyinstaller', ROOT/'cpe_cli.spec')
     shutil.copy2(ROOT/'Open CPE Command Prompt.cmd', folder/'Open CPE Command Prompt.cmd')
     shutil.copy2(ROOT/'CPELOADER_V2.md', folder/'CPELOADER_V2.md')
     shutil.copy2(ROOT/NOTES_FILE, folder/NOTES_FILE)
@@ -75,13 +71,19 @@ def main():
         if source.is_file():
             shutil.copy2(source, licences/'Python-LICENSE.txt')
             break
+    run(sys.executable, ROOT/'tools'/'Package-BaseHalloween.py', '--build-dir', 'build/nightly-game',
+        '--version', VERSION, '--exe-name', EXE_NAME, '--stage-only')
+    from cpe_repair import build_image
+    build_image(ROOT, folder, ROOT/'build'/'cpe-recovery', full_game=True)
+    run(sys.executable, '-m', 'PyInstaller', '--noconfirm', '--distpath', folder,
+        '--workpath', ROOT/'build'/'cpe-cli-pyinstaller', ROOT/'cpe_cli.spec')
     # Smoke testing only renders to an explicit build QA folder, never userdata.
     run(folder/EXE_NAME, '--nightly-self-test', ROOT/'build'/'nightly-qa'/'report.json', timeout=120)
     report = json.loads((ROOT/'build'/'nightly-qa'/'report.json').read_text(encoding='utf-8'))
     if report['python'] != '3.15.2' or report['version'] != VERSION or not report['physics_ok']:
         raise RuntimeError('Frozen nightly smoke test did not pass.')
     run(sys.executable, ROOT/'tools'/'Package-BaseHalloween.py', '--build-dir', 'build/nightly-game',
-        '--version', VERSION, '--exe-name', EXE_NAME)
+        '--version', VERSION, '--exe-name', EXE_NAME, '--archive-only')
     sys.path.insert(0, str(ROOT))
     from cpeloader import CPELoader
     if CPELoader(folder).changes():

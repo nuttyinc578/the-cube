@@ -26,18 +26,33 @@ Close the game and CPE services, then run:
 cpe --cpeloader -cpe/repair -cpeloader/repair
 ```
 
-`--cpeloader` and `-cpeloader` are aliases. Without `-connect`, repair uses the folder containing `cpe.exe`, never the terminal's working directory. Add `-connect "C:\Games\The Cube Beta"` to select another installation of the **same build**.
+`--cpeloader` and `-cpeloader` are aliases. Without `-connect`, repair uses the folder containing `cpe.exe`, never the terminal's working directory. A bare `--connect` also selects that folder. Add `--connect "C:\Games\The Cube Beta"` to select another installation of the **same build**.
 
 The visual recovery window shows a cube illustration, confirmation, real progress and the backup location. **Repair may take up to 3 minutes; slow disks can take longer.** Cancel is selected initially; no artificial countdown delays are added.
 
 - `-cpe/repair` restores the official compiled game (which contains CPE), external CPE Python/bridge files and the backend configuration from the image embedded in `cpe.exe`. This replaces custom CPE/game changes after confirmation.
 - `-cpeloader/repair` restores only the three Python, JavaScript and Ruby loader components, including missing components.
+- `-fullgame/repair` restores every bundled game file covered by the full recovery image: the game executable, CPE, CPELoader, bundled themes/add-ons, launch scripts, documentation and licences. Changed bundled files are backed up before restoration. It does not replace the running `cpe.exe`, the original manifest, or mutable player data.
 - `CPELOADER_MISSING` names missing files. CPE-only repair stops if loader files are missing; include loader repair to restore them. Version-only mode does not inspect game files.
 - Originals go into `backup/cpe-cli/<timestamp>/original`, with a `repair.json` record. On failure, replaced files are rolled back; backups are retained. Interrupted repairs can be recovered manually from that folder.
-- Saves, add-ons, lock state and the original integrity manifest are not rewritten. Other modifications still trigger integrity warnings. Repair never unlocks, relocks or enables updates.
+- Saves, settings, extra custom files, lock state and the original integrity manifest are not rewritten. CPE-only repair leaves add-ons/themes unchanged; full-game repair restores **bundled** add-ons/themes but preserves additional custom files. Other modifications still trigger integrity warnings. Repair never unlocks, relocks or enables updates.
 - A missing/damaged recovery image or mismatching/missing original manifest stops repair. Use a matching official installer in a new empty folder. If `cpe.exe` itself is damaged, use the installer.
 
 For a console-only repair use `--no-gui`; it asks `[y/N]`. Add `--yes` only when explicitly accepting replacement. `--v` and `-LOCK` cannot be combined with repair.
+
+Full-game console repair from the folder containing `cpe.exe`:
+
+```bat
+cpe --cpeloader --connect -fullgame/repair --no-gui
+```
+
+Or select a game folder explicitly:
+
+```bat
+cpe --cpeloader --connect "C:\Games\The Cube Beta" -fullgame/repair --no-gui
+```
+
+Neither command opens the repair window. The terminal displays the selected folder, the backup warning and real progress. An older CPE-only recovery image reports `FULLGAME_IMAGE_MISSING`; it cannot provide full-game recovery.
 
 The bundled image is checksum-verified and tied to this release. It is an offline recovery mechanism, not protection against someone who can replace the executable running as your account.
 

@@ -13,25 +13,31 @@ def main(argv=None) -> int:
     values = list(sys.argv[1:] if argv is None else argv)
     # Support the originally requested -(game folder) spelling as well as a
     # conventional quoted folder argument. No shell expansion or eval is used.
+    option_names = {'-LOCK', '-cpeloader', '-cpe/repair', '-cpeloader/repair', '-fullgame/repair'}
     for option in ('-connect', '--connect'):
         if option in values:
             i = values.index(option) + 1
-            if i < len(values) and values[i].startswith('-') and not values[i].startswith('--'):
+            if (i < len(values) and values[i].startswith('-') and not values[i].startswith('--')
+                    and values[i] not in option_names):
                 values[i] = values[i][1:]
     parser = argparse.ArgumentParser(prog='cpe', description='CPELoader v2: inspect or lock an installed Cube Beta.')
-    parser.add_argument('-connect', '--connect', type=Path, metavar='GAME_FOLDER')
+    game_folder = Path(sys.executable if getattr(sys, 'frozen', False) else __file__).parent
+    parser.add_argument('-connect', '--connect', type=Path, metavar='GAME_FOLDER', nargs='?', const=game_folder,
+                        help='Select a game folder; omit the path to select the folder containing cpe.exe')
     parser.add_argument('-LOCK', '--lock', action='store_true')
     parser.add_argument('-cpeloader', '--cpeloader', action='store_true', required=True)
     parser.add_argument('-cpe/repair', dest='repair_cpe', action='store_true',
                         help='Restore CPE and the compiled game from the bundled recovery image')
     parser.add_argument('-cpeloader/repair', dest='repair_loader', action='store_true',
                         help='Restore missing or changed CPELoader components')
+    parser.add_argument('-fullgame/repair', dest='repair_game', action='store_true',
+                        help='Restore all bundled game files, CPE and CPELoader; preserve player data and lock state')
     parser.add_argument('--no-gui', action='store_true', help='Use console repair instead of the visual recovery screen')
     parser.add_argument('--yes', action='store_true', help='Explicitly accept backup and replacement for repair')
     parser.add_argument('--v', '--version', dest='show_version', action='store_true',
                         help='Show the bundled CPELoader version without connecting or changing files')
     args = parser.parse_args(values)
-    repairing = args.repair_cpe or args.repair_loader
+    repairing = args.repair_cpe or args.repair_loader or args.repair_game
     if args.show_version:
         if args.lock or repairing or args.no_gui or args.yes:
             parser.error('--v/--version cannot be combined with locking or repair options')
@@ -46,10 +52,15 @@ def main(argv=None) -> int:
     try:
         if repairing:
             from cpe_repair import prepare_repair, execute_repair
-            selected = args.connect or Path(sys.executable if getattr(sys, 'frozen', False) else __file__).parent
-            groups = ({'cpe'} if args.repair_cpe else set()) | ({'cpeloader'} if args.repair_loader else set())
+            selected = args.connect or game_folder
+            groups = ({'cpe', 'cpeloader', 'game'} if args.repair_game else
+                      ({'cpe'} if args.repair_cpe else set()) | ({'cpeloader'} if args.repair_loader else set()))
             print('CPE IMAGE REPAIR: this may take up to 3 minutes; slow disks can take longer.', flush=True)
             print('Close the game and CPE services. Changed files are backed up before replacement.', flush=True)
+            print('Game folder: '+str(selected.absolute()), flush=True)
+            if args.repair_game:
+                print('Full-game repair restores bundled themes and add-ons too. Saves, settings, extra custom files, '
+                      'lock state and the running cpe.exe are preserved.', flush=True)
             plan = prepare_repair(selected, groups)
             if plan.missing_loader:
                 print('CPELOADER_MISSING: '+', '.join(plan.missing_loader)+' (selected for restoration)', flush=True)

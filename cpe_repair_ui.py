@@ -29,9 +29,9 @@ def repair_window(plan, *, accepted=False):
     tk.Label(window, text='Game folder: '+str(plan.root), bg='#101720', fg='#9fb1c3',
              font=('Segoe UI', 9), wraplength=680).pack(padx=24, pady=(0, 12))
     description = ('Close the game and CPE services before continuing. This restores official files\n'
-                   'and can replace custom CPE changes. Originals are backed up first.\n'
+                   'and can replace changes to bundled files. Originals are backed up first.\n'
                    'Repair may take up to 3 minutes; slow disks can take longer.\n'
-                   'Your saves, add-ons, loader lock state and original manifest are preserved.')
+                   'Your saves, extra custom files, lock state and original manifest are preserved.')
     tk.Label(window, text=description, bg='#101720', fg='#d5e1ec', justify='center').pack(padx=20)
     status = tk.StringVar(value=f'Ready · {len(plan.payloads)} file(s) need restoration')
     if plan.missing_loader:

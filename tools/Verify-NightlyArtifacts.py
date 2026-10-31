@@ -55,6 +55,22 @@ def main():
                                  capture_output=True, text=True, check=True, timeout=180)
         assert version.stdout.strip() == 'CPELoader v2'
         print('Packaged recovery passed: missing-loader error, embedded image, game restoration, backup and unchanged lock state.')
+        # Full-game mode also covers external bundled assets, not just CPE.
+        licence = (extracted/'LICENCE.txt').read_bytes()
+        addon = extracted/'addons'/'nuttymod'/'nuttymod_loader.py'
+        addon_bytes = addon.read_bytes()
+        (extracted/'LICENCE.txt').unlink()
+        addon.write_bytes(b'QA changed bundled add-on')
+        full = subprocess.run([str(extracted/'cpe.exe'), '--cpeloader', '--connect',
+                               '-fullgame/repair', '--no-gui', '--yes'], cwd=ROOT,
+                              capture_output=True, text=True, timeout=180)
+        assert full.returncode == 0, full.stdout+'\n'+full.stderr
+        assert (extracted/'LICENCE.txt').read_bytes() == licence
+        assert addon.read_bytes() == addon_bytes
+        assert loader.changes() == []
+        assert (extracted/'cpeloader_state.json').read_bytes() == state
+        assert (extracted/'cpeloader_manifest.json').read_bytes() == manifest
+        print('Packaged full-game repair passed: bare --connect, console-only, licence and bundled add-on restoration.')
     print('Final downloads verified: both SHA-256 hashes, extracted ZIP, LGPL text, locked loader and full integrity manifest.')
 
 

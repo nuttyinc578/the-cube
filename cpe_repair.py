@@ -1,7 +1,7 @@
 """Offline, backup-first repair from the recovery image bundled in cpe.exe.
 
 Never imports code from the selected game or replaces its integrity manifest,
-loader state, saves, add-ons, or the running cpe.exe itself.
+loader state, saves, extra custom files, or the running cpe.exe itself.
 """
 from __future__ import annotations
 
@@ -16,8 +16,8 @@ import sys
 import tempfile
 import zipfile
 
-from cpeloader import COMPONENTS
-from release_info import VERSION, EXE_NAME
+from cpeloader import COMPONENTS, snapshot, MUTABLE, EXCLUDED_DIRS
+from release_info import VERSION, EXE_NAME, NOTES_FILE
 
 MAX_IMAGE_BYTES = 256 * 1024 * 1024
 MAX_FILES = 256
@@ -27,6 +27,16 @@ BRIDGE_FILES = (
     'CPE.AppHost/CPE.AppHost.csproj', 'CPE.AppHost/Program.cs',
     'CPE.AppHost/Properties/launchSettings.json',
 )
+GAME_ROOT_FILES = {'LICENCE.txt', 'THIRD_PARTY_NOTICES.txt', 'GAMELIFT_SETUP.md',
+                   'Run CPE Aspire.cmd', 'Run The Cube Beta CPE.cmd', 'Run CPE Java Client.cmd',
+                   'Open CPE Command Prompt.cmd', 'CPELOADER_V2.md', NOTES_FILE}
+GAME_DIRECTORIES = {'addons', 'themes', 'cpe_rephysics', 'third-party-licenses'}
+
+
+def game_asset(name):
+    parts = validate_name(name).parts
+    return (parts[-1] not in MUTABLE and not any(part in EXCLUDED_DIRS for part in parts[:-1])
+            and (name in GAME_ROOT_FILES or parts[0] in GAME_DIRECTORIES))
 
 
 class RepairError(RuntimeError):
@@ -69,13 +79,27 @@ def image_paths():
     return folder/'image.zip', folder/'image.json'
 
 
-def build_image(root, game_folder, output):
+def build_image(root, game_folder, output, *, full_game=False):
     """Build-time only: freeze original release bytes, before cpe.exe is compiled."""
     sources = {EXE_NAME: (game_folder/EXE_NAME, 'cpe'),
                'cpe-backend.json': (root/'cpe-backend.json', 'cpe')}
     sources.update({name: (root/name, 'cpeloader') for name in COMPONENTS})
     sources.update({'cpe/'+name: (root/'cpe'/name, 'cpe') for name in BRIDGE_FILES})
     sources.update({'cpe/'+p.name: (p, 'cpe') for p in sorted((root/'cpe').glob('*.py'))})
+    if full_game:
+        for name in snapshot(game_folder):
+            if name == 'cpe.exe':
+                continue  # Never embed or replace the running recovery executable.
+            path = checked_path(game_folder, name)
+            if name in COMPONENTS:
+                group = 'cpeloader'
+            elif name in (EXE_NAME, 'cpe-backend.json') or name.startswith('cpe/'):
+                group = 'cpe'
+            elif game_asset(name):
+                group = 'game'
+            else:
+                raise RepairError('REPAIR_BUILD: unexpected file in clean release payload: '+name)
+            sources[name] = (path, group)
     output.mkdir(parents=True, exist_ok=False)
     records = {}
     with zipfile.ZipFile(output/'image.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -83,12 +107,12 @@ def build_image(root, game_folder, output):
             data = path.read_bytes()
             records[name] = {'sha256': digest(data), 'size': len(data), 'group': group}
             archive.writestr(name, data)
-    metadata = {'schema': 1, 'version': VERSION, 'files': records,
+    metadata = {'schema': 1, 'version': VERSION, 'files': records, 'full_game': full_game,
                 'image_sha256': digest((output/'image.zip').read_bytes())}
     (output/'image.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
 
 
-def load_image(paths=None):
+def load_image(paths=None, *, require_full=False):
     image, metadata = paths or image_paths()
     try:
         if metadata.stat().st_size > 128*1024 or image.stat().st_size > MAX_IMAGE_BYTES:
@@ -97,6 +121,9 @@ def load_image(paths=None):
         raw = image.read_bytes()
         if record.get('schema') != 1 or record.get('version') != VERSION:
             raise RepairError('REPAIR_IMAGE: unsupported recovery image version.')
+        if require_full and record.get('full_game') is not True:
+            raise RepairError('FULLGAME_IMAGE_MISSING: this recovery image covers CPE only; '
+                              'use a build with a full-game recovery image or the official installer.')
         if digest(raw) != record.get('image_sha256'):
             raise RepairError('REPAIR_IMAGE: checksum mismatch; download a fresh official installer.')
         files = record['files']
@@ -115,9 +142,9 @@ def load_image(paths=None):
                 name, info = entry.filename, files[entry.filename]
                 validate_name(name)  # Never extract arbitrary archive members.
                 group = info['group']
-                allowed = (name in COMPONENTS if group == 'cpeloader' else
-                           group == 'cpe' and (name in (EXE_NAME, 'cpe-backend.json') or
-                                              name.startswith('cpe/')))
+                allowed = ((group == 'cpeloader' and name in COMPONENTS) or
+                           (group == 'cpe' and (name in (EXE_NAME, 'cpe-backend.json') or name.startswith('cpe/'))) or
+                           (group == 'game' and record.get('full_game') is True and game_asset(name)))
                 if not allowed or name.casefold() in folded or entry.is_dir():
                     raise RepairError('REPAIR_IMAGE: unsupported or duplicate recovery target.')
                 folded.add(name.casefold())
@@ -150,7 +177,7 @@ def prepare_repair(root, groups, paths=None):
     if not root.is_dir():
         raise RepairError('GAME_FOLDER_MISSING: select an existing extracted game folder.')
     root = root.resolve(strict=True)
-    files, payloads = load_image(paths)
+    files, payloads = load_image(paths, require_full='game' in groups)
     manifest = checked_path(root, 'cpeloader_manifest.json')
     try:
         if manifest.stat().st_size > 4*1024*1024:
