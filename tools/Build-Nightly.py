@@ -44,7 +44,7 @@ def main():
     (ROOT/'build'/'christmas-icon.ico').write_bytes(
         struct.pack('<HHH', 0, 1, 1) + struct.pack('<BBBBHHII', 64, 64, 0, 0, 1, 32, len(icon_data), 22) + icon_data)
     if not args.skip_tests:
-        run(sys.executable, '-m', 'unittest', 'test_christmas', 'test_nightly', 'test_cpeloader', 'test_halloween_music',
+        run(sys.executable, '-m', 'unittest', 'test_cpe_repair', 'test_christmas', 'test_nightly', 'test_cpeloader', 'test_halloween_music',
             'test_og_recovery', 'test_nuttymod_isolation', 'test_error_update', 'test_summer_game',
             'test_theme_system', 'test_legacy_versions', 'test_cube_launcher', 'test_gamelift',
             'test_dedicated_server', 'cpe.tests.test_cpe', '-v')
@@ -52,6 +52,8 @@ def main():
         '--workpath', ROOT/'build'/'nightly-pyinstaller', ROOT/'nightly_build.spec')
     run(sys.executable, '-m', 'unittest',
         'test_nuttymod_isolation.NuttyModIsolationTests.test_portable_build_reads_version_from_executable', '-v')
+    from cpe_repair import build_image
+    build_image(ROOT, folder, ROOT/'build'/'cpe-recovery')
     run(sys.executable, '-m', 'PyInstaller', '--noconfirm', '--distpath', folder,
         '--workpath', ROOT/'build'/'cpe-cli-pyinstaller', ROOT/'cpe_cli.spec')
     shutil.copy2(ROOT/'Open CPE Command Prompt.cmd', folder/'Open CPE Command Prompt.cmd')

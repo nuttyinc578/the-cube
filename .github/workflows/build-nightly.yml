@@ -13,6 +13,8 @@ on:
       - 'test_christmas.py'
       - 'cpeloader_cli.py'
       - 'cpe_cli.spec'
+      - 'cpe_repair*.py'
+      - 'test_cpe_repair.py'
       - 'fluent_ui.py'
       - 'cube_updater.py'
       - 'cube_core.py'

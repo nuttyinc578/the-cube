@@ -6,6 +6,7 @@ Experimental Christmas build. **6.4.2 remains the stable release.**
 
 - Added `cpe -cpeloader --v` (or `--version`) to print `CPELoader v2` without connecting to a game folder or changing files. Combining version mode with `-LOCK` is rejected.
 - Rebuilt both the Windows installer and portable ZIP; the build verifies the version command in the packaged `cpe.exe`.
+- Added `cpe --cpeloader -cpe/repair -cpeloader/repair`: a visual recovery screen with a cube illustration, an up-to-3-minute estimate, confirmation, real progress and backup-first restoration from a bundled recovery image. Missing loader components report `CPELOADER_MISSING`. The original manifest, lock state and saves are preserved; failed replacements are rolled back.
 - The updater now understands numbered nightly revisions and does not downgrade or repeat the current version. Older builds do not recognize numbered nightlies: download this installer or portable ZIP directly from GitHub.
 - The previous `6.4.3-nightly` release and stable `6.4.2` downloads remain available unchanged.
 
@@ -29,6 +30,7 @@ Open **Open CPE Command Prompt.cmd** in the game folder:
 ```bat
 cpe -connect "C:\Games\The Cube Beta" -LOCK -cpeloader
 cpe -cpeloader --v
+cpe --cpeloader -cpe/repair -cpeloader/repair
 ```
 
 The `-"C:\Games\The Cube Beta"` spelling is also accepted. Omit `-LOCK` for read-only status. No global PATH changes are made. See CPELOADER_V2.md for details.

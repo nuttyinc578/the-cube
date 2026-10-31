@@ -18,6 +18,29 @@ cpe -cpeloader --v
 
 This prints `CPELoader v2`. `--version` is an alias. No game folder is required, and no game files or lock states are read or changed. If `-connect` is supplied, version mode still reports this command's bundled version, not the selected folder's loader. Version mode cannot be combined with `-LOCK`.
 
+## Recovery image and repair screen
+
+Close the game and CPE services, then run:
+
+```bat
+cpe --cpeloader -cpe/repair -cpeloader/repair
+```
+
+`--cpeloader` and `-cpeloader` are aliases. Without `-connect`, repair uses the folder containing `cpe.exe`, never the terminal's working directory. Add `-connect "C:\Games\The Cube Beta"` to select another installation of the **same build**.
+
+The visual recovery window shows a cube illustration, confirmation, real progress and the backup location. **Repair may take up to 3 minutes; slow disks can take longer.** Cancel is selected initially; no artificial countdown delays are added.
+
+- `-cpe/repair` restores the official compiled game (which contains CPE), external CPE Python/bridge files and the backend configuration from the image embedded in `cpe.exe`. This replaces custom CPE/game changes after confirmation.
+- `-cpeloader/repair` restores only the three Python, JavaScript and Ruby loader components, including missing components.
+- `CPELOADER_MISSING` names missing files. CPE-only repair stops if loader files are missing; include loader repair to restore them. Version-only mode does not inspect game files.
+- Originals go into `backup/cpe-cli/<timestamp>/original`, with a `repair.json` record. On failure, replaced files are rolled back; backups are retained. Interrupted repairs can be recovered manually from that folder.
+- Saves, add-ons, lock state and the original integrity manifest are not rewritten. Other modifications still trigger integrity warnings. Repair never unlocks, relocks or enables updates.
+- A missing/damaged recovery image or mismatching/missing original manifest stops repair. Use a matching official installer in a new empty folder. If `cpe.exe` itself is damaged, use the installer.
+
+For a console-only repair use `--no-gui`; it asks `[y/N]`. Add `--yes` only when explicitly accepting replacement. `--v` and `-LOCK` cannot be combined with repair.
+
+The bundled image is checksum-verified and tied to this release. It is an offline recovery mechanism, not protection against someone who can replace the executable running as your account.
+
 Locking disables flashing for the Python, Node.js and Ruby components. It does **not** remove mods, rewrite game code, delete backups, regenerate an integrity baseline or certify a modified game as official. Existing warnings stay visible. The official updater refuses modified, unlocked, partially unlocked and custom games.
 
 ## Fast CPE

@@ -21,21 +21,59 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog='cpe', description='CPELoader v2: inspect or lock an installed Cube Beta.')
     parser.add_argument('-connect', '--connect', type=Path, metavar='GAME_FOLDER')
     parser.add_argument('-LOCK', '--lock', action='store_true')
-    parser.add_argument('-cpeloader', action='store_true', required=True)
+    parser.add_argument('-cpeloader', '--cpeloader', action='store_true', required=True)
+    parser.add_argument('-cpe/repair', dest='repair_cpe', action='store_true',
+                        help='Restore CPE and the compiled game from the bundled recovery image')
+    parser.add_argument('-cpeloader/repair', dest='repair_loader', action='store_true',
+                        help='Restore missing or changed CPELoader components')
+    parser.add_argument('--no-gui', action='store_true', help='Use console repair instead of the visual recovery screen')
+    parser.add_argument('--yes', action='store_true', help='Explicitly accept backup and replacement for repair')
     parser.add_argument('--v', '--version', dest='show_version', action='store_true',
                         help='Show the bundled CPELoader version without connecting or changing files')
     args = parser.parse_args(values)
+    repairing = args.repair_cpe or args.repair_loader
     if args.show_version:
-        if args.lock:
-            parser.error('--v/--version cannot be combined with -LOCK')
+        if args.lock or repairing or args.no_gui or args.yes:
+            parser.error('--v/--version cannot be combined with locking or repair options')
         print(f'CPELoader v{LOADER_VERSION}')
         return 0
-    if args.connect is None:
+    if repairing and args.lock:
+        parser.error('Repair preserves lock state; run -LOCK separately after repair')
+    if not repairing and (args.no_gui or args.yes):
+        parser.error('--no-gui and --yes require a repair operation')
+    if args.connect is None and not repairing:
         parser.error('-connect GAME_FOLDER is required for status or locking')
     try:
+        if repairing:
+            from cpe_repair import prepare_repair, execute_repair
+            selected = args.connect or Path(sys.executable if getattr(sys, 'frozen', False) else __file__).parent
+            groups = ({'cpe'} if args.repair_cpe else set()) | ({'cpeloader'} if args.repair_loader else set())
+            print('CPE IMAGE REPAIR: this may take up to 3 minutes; slow disks can take longer.', flush=True)
+            print('Close the game and CPE services. Changed files are backed up before replacement.', flush=True)
+            plan = prepare_repair(selected, groups)
+            if plan.missing_loader:
+                print('CPELOADER_MISSING: '+', '.join(plan.missing_loader)+' (selected for restoration)', flush=True)
+            if not args.no_gui:
+                from cpe_repair_ui import repair_window
+                return repair_window(plan, accepted=args.yes)
+            if not args.yes:
+                try:
+                    answer = input('Restore official files from the recovery image? [y/N] ')
+                except EOFError:
+                    answer = ''
+                if answer.strip().lower() != 'y':
+                    print('Repair cancelled. No files changed.')
+                    return 2
+            result = execute_repair(plan, lambda n, text: print(f'{n:3d}%  {text}', flush=True))
+            print(json.dumps(result, indent=2))
+            return 0
         root = args.connect.resolve(strict=True)
-        if not root.is_dir() or not all((root/name).is_file() for name in COMPONENTS):
+        if not root.is_dir():
             raise ValueError('Select the extracted Cube Beta game folder, not a ZIP or a parent directory.')
+        missing = [name for name in COMPONENTS if not (root/name).is_file()]
+        if missing:
+            raise RuntimeError('CPELOADER_MISSING: '+', '.join(missing)+
+                               '. Use --cpeloader -cpeloader/repair with this game folder, or reinstall.')
         loader = CPELoader(root)
         if args.lock:
             loader.lock()

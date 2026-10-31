@@ -18,7 +18,7 @@ def main():
     parser.add_argument('--version', help='Optional release version for the portable filename')
     parser.add_argument('--exe-name', default='The Cube Beta Halloween Update.exe')
     args = parser.parse_args()
-    if args.version and not re.fullmatch(r'\d+\.\d+\.\d+(-nightly)?', args.version):
+    if args.version and not re.fullmatch(r'\d+\.\d+\.\d+(-nightly(?:\.[1-9]\d{0,8})?)?', args.version):
         raise ValueError('Release version must have three numeric components.')
     folder = (ROOT/args.build_dir).resolve()
     if Path(args.exe_name).name != args.exe_name or ROOT not in folder.parents or not (folder/args.exe_name).is_file():

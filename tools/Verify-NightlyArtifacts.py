@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import tempfile
 import sys
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -32,6 +33,28 @@ def main():
         assert not loader.unlocked and all(loader.state()['components'].get(n) is False for n in COMPONENTS)
         assert loader.changes() == [], 'Portable payload differs from its original manifest'
         assert not any((extracted/name).exists() for name in ('userdata', 'gamelift.json', 'cpe-flash-profile.json'))
+        manifest = (extracted/'cpeloader_manifest.json').read_bytes()
+        state = (extracted/'cpeloader_state.json').read_bytes()
+        # Only damage the disposable extracted QA copy, never an installed game.
+        (extracted/'cpeloader.py').unlink()
+        (extracted/EXE_NAME).write_bytes(b'QA damaged game image')
+        missing = subprocess.run([str(extracted/'cpe.exe'), '--cpeloader', '-connect', str(extracted)],
+                                 capture_output=True, text=True, timeout=180)
+        assert missing.returncode == 1 and 'CPELOADER_MISSING: cpeloader.py' in missing.stderr
+        # No -connect: prove the executable chooses its own game folder, not cwd.
+        restored = subprocess.run([str(extracted/'cpe.exe'), '--cpeloader', '-cpe/repair',
+                                   '-cpeloader/repair', '--no-gui', '--yes'], cwd=ROOT,
+                                  capture_output=True, text=True, timeout=180)
+        assert restored.returncode == 0, restored.stdout+'\n'+restored.stderr
+        assert (extracted/'cpeloader_manifest.json').read_bytes() == manifest
+        assert (extracted/'cpeloader_state.json').read_bytes() == state
+        assert loader.changes() == [], 'Recovery image did not restore the exact original bytes'
+        backups = list((extracted/'backup'/'cpe-cli').glob('*/original/'+EXE_NAME))
+        assert len(backups) == 1 and backups[0].read_bytes() == b'QA damaged game image'
+        version = subprocess.run([str(extracted/'cpe.exe'), '--cpeloader', '--v'],
+                                 capture_output=True, text=True, check=True, timeout=180)
+        assert version.stdout.strip() == 'CPELoader v2'
+        print('Packaged recovery passed: missing-loader error, embedded image, game restoration, backup and unchanged lock state.')
     print('Final downloads verified: both SHA-256 hashes, extracted ZIP, LGPL text, locked loader and full integrity manifest.')
 
 
