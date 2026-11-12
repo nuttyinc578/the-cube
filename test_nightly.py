@@ -163,6 +163,7 @@ class NightlyUITests(unittest.TestCase):
             controls, actions = render_home(self.app, 1.5)
             self.assertEqual(len(controls), len(actions))
             self.assertIn('single', actions)
+            self.assertIn('membership', actions)
             self.assertIn('updater', actions)
             for control in controls:
                 self.assertTrue(self.app.screen.get_rect().contains(control.rect))

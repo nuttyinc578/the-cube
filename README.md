@@ -1,7 +1,7 @@
 # The Cube Beta — 6.4.2 Stable / 6.4.3 Nightly
 
 **Stable:** [6.4.2 installer and portable](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.2).
-**Experimental:** [6.4.3-nightly installer, portable and checksums](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.3-nightly).
+**Experimental:** [6.4.3-nightly.2 installer, portable and checksums](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.3-nightly.2).
 [Website](https://nuttyinc578.github.io/the-cube/).
 
 The new nightly uses Python 3.15.2 with pygame-ce and brings the Christmas Workshop, eight themes, CPE 0.0.3-nightly protected caches, two-step Fast CPE consent (Ctrl+Alt+T), CPELoader v2 and the Cube Beta Updater. The Power & Remastered countdown awaits a release date. See [nightly notes and build instructions](NIGHTLY_6.4.3.md). Nightly builds are experimental; keep them separate from stable installs and backups.
@@ -22,7 +22,11 @@ The Cube Beta is an interactive physics sandbox powered by the Cube Physics Engi
 
 ## CPELoader v2
 
-The Christmas nightly includes a standalone `cpe.exe`. Open **Open CPE Command Prompt.cmd** in the game folder and run `cpe -connect "C:\Games\The Cube Beta" -LOCK -cpeloader`. Omit `-LOCK` for read-only status. Relocking keeps existing file-modification warnings. See [command and Fast CPE documentation](CPELOADER_V2.md).
+The Christmas nightly includes a standalone `cpe.exe`. Open **Open CPE Command Prompt.cmd** in the game folder and run `cpe -connect "C:\Games\The Cube Beta" -LOCK -cpeloader`. Omit `-LOCK` for read-only status. Run `cpe -cpeloader --v` (or `--version`) to show the bundled loader version without connecting to a game folder. Relocking keeps existing file-modification warnings. See [command and Fast CPE documentation](CPELOADER_V2.md).
+
+Nightly.2 also includes a visual recovery screen and bundled repair image: `cpe --cpeloader -cpe/repair -cpeloader/repair`. Close the game first. Repair asks before replacing files, backs up originals and preserves saves and lock state. Missing loader files produce a clear `CPELOADER_MISSING` message. See the recovery documentation before restoring a modified game.
+
+For console-only full-game recovery, run `cpe --cpeloader --connect -fullgame/repair --no-gui`. A bare `--connect` selects the folder containing `cpe.exe`; you can also supply a quoted game-folder path. This restores bundled game files, including bundled themes and add-ons, while preserving saves, settings, extra custom files and lock state.
 
 CPELoader starts locked and blocks engine flashing. Press **Ctrl+A** in the game
 to open its warning screen; **Y** unlocks the Python, Node.js, and Ruby components
@@ -47,11 +51,13 @@ NuttyMod is isolated under `addons/nuttymod` and is not scanned during a normal 
 
 The nightly.link ZIP contains:
 
-- `The-Cube-Beta-6.4.3-nightly-Setup.exe`
-- `The-Cube-Beta-Christmas-6.4.3-nightly-Portable.zip`
+- `The-Cube-Beta-6.4.3-nightly.2-Setup.exe`
+- `The-Cube-Beta-Christmas-6.4.3-nightly.2-Portable.zip`
 - `SHA256SUMS.txt`
 
 The custom installer displays the MIT License and requires acceptance before installation. The Windows files are not digitally signed, so SmartScreen may show an unknown-publisher warning.
+
+Older builds do not recognize numbered nightly revisions in their updater. Download nightly.2 directly from GitHub and install or extract it into a separate empty folder.
 
 ## Run from source
 

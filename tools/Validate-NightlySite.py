@@ -31,6 +31,11 @@ def main():
     html = (docs/'index.html').read_text(encoding='utf-8')
     page = Page()
     page.feed(html)
+    account = 'https://the-cube-beta-marketplace.memberful.com/account'
+    assert account in page.links
+    membership = (docs/'plus.html').read_text(encoding='utf-8')
+    assert account in membership and all('src="memberful.js"' in s for s in (html, membership))
+    assert 'https://js.memberful.com/embed.js' in (docs/'memberful.js').read_text(encoding='utf-8')
     for link in page.links:
         if link.startswith('#'):
             assert link[1:] in page.ids, f'Missing anchor: {link}'
@@ -38,8 +43,8 @@ def main():
         if not urlsplit(resource).scheme:
             assert (docs/resource).is_file(), f'Missing website asset: {resource}'
     base = 'https://github.com/nuttyinc578/the-cube/releases/download/'
-    for filename in ('The-Cube-Beta-6.4.3-nightly-Setup.exe', 'The-Cube-Beta-Christmas-6.4.3-nightly-Portable.zip', 'SHA256SUMS.txt'):
-        assert base+'6.4.3-nightly/'+filename in page.links
+    for filename in ('The-Cube-Beta-6.4.3-nightly.2-Setup.exe', 'The-Cube-Beta-Christmas-6.4.3-nightly.2-Portable.zip', 'SHA256SUMS.txt'):
+        assert base+'6.4.3-nightly.2/'+filename in page.links
     assert base+'6.4.2/The-Cube-Beta-6.4.2-Setup.exe' in page.links
     assert base+'6.4.2/The-Cube-Beta-Halloween-6.4.2-Portable.zip' in page.links
     assert 'Build not yet available' not in html and 'No matching published package' not in html

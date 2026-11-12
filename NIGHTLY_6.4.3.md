@@ -4,6 +4,8 @@ Experimental Christmas build. **6.4.2 remains the stable release.**
 
 ## Changes in nightly.2
 
+- An optional Cube Beta PLUS button opens the Memberful membership page in a separate browser window. No membership is required to play. These downloads contain the free edition only.
+
 - Added `cpe -cpeloader --v` (or `--version`) to print `CPELoader v2` without connecting to a game folder or changing files. Combining version mode with `-LOCK` is rejected.
 - Rebuilt both the Windows installer and portable ZIP; the build verifies the version command in the packaged `cpe.exe`.
 - Added `cpe --cpeloader -cpe/repair -cpeloader/repair`: a visual recovery screen with a cube illustration, an up-to-3-minute estimate, confirmation, real progress and backup-first restoration from a bundled recovery image. Missing loader components report `CPELOADER_MISSING`. The original manifest, lock state and saves are preserved; failed replacements are rolled back.

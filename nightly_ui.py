@@ -6,6 +6,9 @@ import queue
 import threading
 import time
 import webbrowser
+import os
+import subprocess
+from pathlib import Path
 from datetime import datetime, timezone
 from types import MethodType
 
@@ -53,6 +56,25 @@ def set_theme(app, theme):
     save_settings(app.settings)
 
 
+MEMBERSHIP_PAGE = 'https://nuttyinc578.github.io/the-cube/plus.html'
+
+
+def open_membership():
+    """A browser-managed web window, never a privileged game webview."""
+    for location in ('ProgramFiles(x86)', 'ProgramFiles', 'LOCALAPPDATA'):
+        base = os.environ.get(location)
+        if not base:
+            continue
+        edge = Path(base) / 'Microsoft/Edge/Application/msedge.exe'
+        if edge.is_file():
+            try:
+                subprocess.Popen([str(edge), '--app=' + MEMBERSHIP_PAGE])
+                return True
+            except OSError:
+                continue
+    return webbrowser.open_new(MEMBERSHIP_PAGE)
+
+
 def home_items(app):
     items = [('Home', 'home'), ('Themes', 'themes'), ('Cube Beta Updater', 'updater'),
              ('Settings', 'settings'), ('Security ???', 'security')]
@@ -85,7 +107,8 @@ def render_home(app, ticks=0):
     text(app, 'Grab, throw and build with CPE + IPE particles.', (313, 302), SECONDARY)
     cube(app, (960, 290), 57, ticks)
     controls += [FluentButton((311, 348, 229, 46), 'Play solo  →', a, primary=True),
-                 FluentButton((556, 348, 226, 46), 'Multiplayer', a)]
+                 FluentButton((556, 348, 226, 46), 'Multiplayer', a),
+                 FluentButton((799, 348, 240, 46), 'Cube Beta PLUS ↗', a)]
     panel(app, pygame.Rect(283, 435, 386, 115))
     text(app, 'Make it yours', (305, 451), font=app.font)
     text(app, f'Active theme: {app.settings["theme"].title()}', (305, 480), SECONDARY)
@@ -100,7 +123,7 @@ def render_home(app, ticks=0):
     text(app, power_countdown(getattr(app, 'power_release_utc', None)), (305, 649), SECONDARY)
     unlocked = getattr(app, 'cpeloader', None) and app.cpeloader.unlocked
     text(app, 'LOADER UNLOCKED' if unlocked else 'CPELOADER v2 LOCKED', (858, 649), a, app.tiny)
-    return controls, [key for _, key in items]+['single', 'multiplayer', 'themes', 'addons']
+    return controls, [key for _, key in items]+['single', 'multiplayer', 'membership', 'themes', 'addons']
 
 
 def _main_menu(app):
@@ -124,6 +147,9 @@ def _main_menu(app):
         if action == 'security':
             from halloween_update import _security_door
             _security_door(app)
+        elif action == 'membership':
+            if not open_membership():
+                app.notify('Open nuttyinc578.github.io/the-cube/plus.html in your browser.', 8)
         elif action == 'themes':
             _themes_menu(app)
         elif action == 'updater':
