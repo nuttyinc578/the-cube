@@ -39,11 +39,35 @@ def run(report_path):
         app.settings['theme'] = 'christmas'
         render_loading(app, .65, 1.2)
         pygame.image.save(app.screen, str(report_path.parent/'loading.png'))
+        from sky_gate import ARCHIVE, ArchiveView, PlayGate
+        view = ArchiveView()
+        for view.index in range(len(ARCHIVE)):
+            view.draw(app)
+            assert view.images[ARCHIVE[view.index][2]] is not None, 'Missing packaged archive capture'
+        pygame.image.save(app.screen, str(report_path.parent/'dvd-gallery.png'))
+        from archive_ending import ArchiveEnding, SCENES
+        ending = ArchiveEnding()
+        ending.draw(app, 0)
+        pygame.image.save(app.screen, str(report_path.parent/'dvd-credits.png'))
+        elapsed = 0.0
+        ending.page = 'flight'
+        for i, (_, _, duration) in enumerate(SCENES):
+            ending.draw(app, elapsed + duration/2)
+            pygame.image.save(app.screen, str(report_path.parent/f'dvd-flight-{i+1}.png'))
+            elapsed += duration
+        ending.page = 'offer'
+        ending.draw(app, elapsed)
+        pygame.image.save(app.screen, str(report_path.parent/'dvd-special-player.png'))
+        ending.page = 'contribute'
+        ending.draw(app, elapsed)
         from christmas_update import render_fast_warning, christmas_background
         buttons(app, render_fast_warning(app), [])
         pygame.image.save(app.screen, str(report_path.parent/'fast-cpe-warning.png'))
         christmas_background(app, 1.2)
         pygame.image.save(app.screen, str(report_path.parent/'christmas-world.png'))
+        app.settings['sky_gate_stage'] = 2
+        PlayGate().draw(app)
+        pygame.image.save(app.screen, str(report_path.parent/'sky-gate.png'))
         render_unlock(app)
         pygame.image.save(app.screen, str(report_path.parent/'cpeloader-unlock.png'))
         render_loader_warning(app, ['cpe-backend.json'], modified=True)
@@ -74,7 +98,8 @@ def run(report_path):
         # PyInstaller metadata is optional; pygame.version is the actual imported runtime.
         report = {'version': VERSION, 'python': platform.python_version(),
             'pygame': pygame.version.ver, 'pygame_ce': bool(getattr(pygame, 'IS_CE', False)),
-            'physics_ok': True, 'themes_rendered': list(BUILTINS),
+            'physics_ok': True, 'themes_rendered': list(BUILTINS), 'archive_frames': len(ARCHIVE),
+            'archive_ending_frames': len(SCENES),
             'keyboard_ok': True, 'instance_menu_binding_ok': True,
             'loader_default': 'locked', 'cpeloader_version': '2', 'cpe_version': '0.0.3-nightly',
             'cache_protection': True, 'network_used': False}

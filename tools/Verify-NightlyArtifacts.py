@@ -1,5 +1,6 @@
 """Verify the exact downloadable ZIP, checksums and locked portable payload."""
 from pathlib import Path
+import argparse
 import hashlib
 import tempfile
 import sys
@@ -13,7 +14,9 @@ from cube_launcher.core import unpack
 
 
 def main():
-    folder = ROOT/'build'/'nightly-download'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--download-dir', type=Path, default=ROOT/'build'/'nightly-download')
+    folder = parser.parse_args().download_dir.resolve()
     expected = {SETUP_NAME, PORTABLE_NAME}
     found = set()
     for line in (folder/'SHA256SUMS.txt').read_text(encoding='ascii').splitlines():

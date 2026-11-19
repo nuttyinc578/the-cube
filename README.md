@@ -1,10 +1,12 @@
 # The Cube Beta — 6.4.2 Stable / 6.4.3 Nightly
 
 **Stable:** [6.4.2 installer and portable](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.2).
-**Experimental:** [6.4.3-nightly.2 installer, portable and checksums](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.3-nightly.2).
+**Experimental:** [6.4.3-nightly.3 installer, portable and checksums](https://github.com/nuttyinc578/the-cube/releases/tag/6.4.3-nightly.3).
 [Website](https://nuttyinc578.github.io/the-cube/).
 
 The new nightly uses Python 3.15.2 with pygame-ce and brings the Christmas Workshop, eight themes, CPE 0.0.3-nightly protected caches, two-step Fast CPE consent (Ctrl+Alt+T), CPELoader v2 and the Cube Beta Updater. The Power & Remastered countdown awaits a release date. See [nightly notes and build instructions](NIGHTLY_6.4.3.md). Nightly builds are experimental; keep them separate from stable installs and backups.
+
+Nightly.3 adds optional GitHub sign-in, the Sky Gate key and DVD archive, and the Special Player ending after the credits. GitHub contribution options open in the browser; the game never submits issues or pull requests automatically.
 
 [![CPE release](https://img.shields.io/github/v/release/nuttyinc578/CPE-OPEN-source?style=for-the-badge&label=CPE)](https://github.com/nuttyinc578/CPE-OPEN-source/releases/latest)
 [![CPE status](https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml/badge.svg)](https://github.com/nuttyinc578/CPE-OPEN-source/actions/workflows/build.yml)
@@ -51,13 +53,13 @@ NuttyMod is isolated under `addons/nuttymod` and is not scanned during a normal 
 
 The nightly.link ZIP contains:
 
-- `The-Cube-Beta-6.4.3-nightly.2-Setup.exe`
-- `The-Cube-Beta-Christmas-6.4.3-nightly.2-Portable.zip`
+- `The-Cube-Beta-6.4.3-nightly.3-Setup.exe`
+- `The-Cube-Beta-Christmas-6.4.3-nightly.3-Portable.zip`
 - `SHA256SUMS.txt`
 
 The custom installer displays the MIT License and requires acceptance before installation. The Windows files are not digitally signed, so SmartScreen may show an unknown-publisher warning.
 
-Older builds do not recognize numbered nightly revisions in their updater. Download nightly.2 directly from GitHub and install or extract it into a separate empty folder.
+Older builds do not recognize numbered nightly revisions in their updater. Download nightly.3 directly from GitHub and install or extract it into a separate empty folder.
 
 ## Run from source
 

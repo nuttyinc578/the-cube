@@ -77,7 +77,8 @@ def open_membership():
 
 def home_items(app):
     items = [('Home', 'home'), ('Themes', 'themes'), ('Cube Beta Updater', 'updater'),
-             ('Settings', 'settings'), ('Security ???', 'security')]
+             ('Settings', 'settings'), ('Security ???', 'security'),
+             ('GitHub Account' if getattr(app,'github_login','') else 'Sign in with GitHub', 'github')]
     if app.theme_store.state().get('developer_enabled'):
         items.append(('Developer mode', 'developer'))
     items.append(('Exit game', 'quit'))
@@ -92,7 +93,7 @@ def render_home(app, ticks=0):
     text(app, 'THE CUBE', (112, 51), font=app.font)
     text(app, f'BETA / {CHANNEL.upper()}', (112, 80), SECONDARY)
     items = home_items(app)
-    controls = [FluentButton((41, 153+i*58, 201, 46), label, a) for i, (label, _) in enumerate(items)]
+    controls = [FluentButton((41, 140+i*54, 201, 43), label, a) for i, (label, _) in enumerate(items)]
     text(app, VERSION, (45, 599), a)
     text(app, 'Tab to navigate · Enter to select', (45, 631), SECONDARY, app.tiny, 192)
     text(app, 'Ctrl+Alt+T / Fast CPE', (45, 655), SECONDARY, app.tiny)
@@ -100,7 +101,10 @@ def render_home(app, ticks=0):
     text(app, 'FAST CPE ON' if fast_enabled() else 'CPE 0.0.3 / Protected cache', (292, 155), a, app.tiny)
     text(app, 'YOUR PHYSICS. YOUR WORLD.', (291, 37), a)
     text(app, 'Welcome back.', (289, 70), font=app.large)
-    text(app, 'Christmas by default. Your winter workshop awaits.', (292, 130), SECONDARY)
+    login = getattr(app, 'github_login', '')
+    text(app, 'Signed in as @' + login if login else 'Guest play ready. Find the Sky Gate key in Security ???.', (292, 130), SECONDARY)
+    if app.settings.get('special_player_unlocked') is True:
+        text(app, '✦  SPECIAL PLAYER', (896, 48), a, app.tiny)
     panel(app, pygame.Rect(283, 179, 793, 238), color=(32, 31, 47))
     text(app, 'CHRISTMAS / FLUENT EXPERIENCE', (311, 204), a)
     text(app, 'Shake up a snow globe.', (310, 241), font=app.large)
@@ -150,6 +154,10 @@ def _main_menu(app):
         elif action == 'membership':
             if not open_membership():
                 app.notify('Open nuttyinc578.github.io/the-cube/plus.html in your browser.', 8)
+        elif action == 'github':
+            from github_signin import account_screen
+            if not account_screen(app):
+                return 'quit'
         elif action == 'themes':
             _themes_menu(app)
         elif action == 'updater':
@@ -330,7 +338,10 @@ def _updater_menu(app):
                 webbrowser.open(NIGHTLY_URL)
 
 
-def render_loading(app, progress, ticks=0, status='Preparing your physics world'):
+LOADING_SIGNIN = pygame.Rect(607, 574, 279, 39)
+
+
+def render_loading(app, progress, ticks=0, status='Preparing your physics world', *, account_panel=True):
     background(app, ticks)
     panel(app, pygame.Rect(170, 88, 760, 544))
     text(app, f'THE CUBE BETA / {VERSION}', (212, 123), accent(app))
@@ -343,6 +354,10 @@ def render_loading(app, progress, ticks=0, status='Preparing your physics world'
     text(app, f'{int(progress*100):02d}%  /  CPE + IPE', (212, 502), SECONDARY)
     text(app, 'POWER & REMASTERED', (212, 550), accent(app), app.tiny)
     text(app, power_countdown(getattr(app, 'power_release_utc', None)), (212, 578), SECONDARY)
+    if account_panel:
+        login = getattr(app, 'github_login', '')
+        FluentButton(LOADING_SIGNIN, 'GitHub Account / G' if login else 'Sign in with GitHub / G', accent(app)).draw(
+            app.screen, app.small, pygame.mouse.get_pos())
 
 
 def _loading_screen(app):
@@ -365,6 +380,14 @@ def _loading_screen(app):
             return False
         if any(e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE for e in events):
             return False
+        if any((e.type == pygame.KEYDOWN and e.key == pygame.K_g)
+               or (e.type == pygame.MOUSEBUTTONUP and e.button == 1 and LOADING_SIGNIN.collidepoint(e.pos))
+               for e in events):
+            from github_signin import account_screen
+            opened = time.monotonic()
+            if not account_screen(app):
+                return False
+            started += time.monotonic() - opened
         skip = progress >= .5 and any(e.type == pygame.KEYDOWN and e.key in (pygame.K_RETURN, pygame.K_SPACE) for e in events)
         render_loading(app, progress, pygame.time.get_ticks()/1000, stages[min(3, int(progress*4))])
         warning = 'Modified game files detected' if getattr(app, 'cpeloader_changes', []) else ('CPELoader unlocked / use the external installer' if app.cpeloader.unlocked else 'CPELoader locked / official updates enabled')

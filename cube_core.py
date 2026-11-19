@@ -109,6 +109,8 @@ DEFAULT_SETTINGS = {
     "event_interval": 18,
     "fluent_ui_seen": False,
     "christmas_ui_seen": False,
+    "sky_gate_stage": 0,
+    "special_player_unlocked": False,
 }
 
 
