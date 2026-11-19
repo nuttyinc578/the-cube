@@ -25,6 +25,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--skip-tests', action='store_true', help='Use only after the same sources passed tests')
     parser.add_argument('--skip-installer', action='store_true')
+    parser.add_argument('--download-dir', type=Path, default=ROOT/'build'/'nightly-download')
     args = parser.parse_args()
     if sys.version_info[:3] != (3, 15, 2):
         raise RuntimeError('This nightly requires Python 3.15.2. Create a dedicated venv and install requirements-nightly.txt.')
@@ -44,7 +45,7 @@ def main():
     (ROOT/'build'/'christmas-icon.ico').write_bytes(
         struct.pack('<HHH', 0, 1, 1) + struct.pack('<BBBBHHII', 64, 64, 0, 0, 1, 32, len(icon_data), 22) + icon_data)
     if not args.skip_tests:
-        run(sys.executable, '-m', 'unittest', 'test_cpe_repair', 'test_christmas', 'test_nightly', 'test_cpeloader', 'test_halloween_music',
+        run(sys.executable, '-m', 'unittest', 'test_sky_gate', 'test_github_signin', 'test_cpe_repair', 'test_christmas', 'test_nightly', 'test_cpeloader', 'test_halloween_music',
             'test_og_recovery', 'test_nuttymod_isolation', 'test_error_update', 'test_summer_game',
             'test_theme_system', 'test_legacy_versions', 'test_cube_launcher', 'test_gamelift',
             'test_dedicated_server', 'cpe.tests.test_cpe', '-v')
@@ -80,7 +81,8 @@ def main():
     # Smoke testing only renders to an explicit build QA folder, never userdata.
     run(folder/EXE_NAME, '--nightly-self-test', ROOT/'build'/'nightly-qa'/'report.json', timeout=120)
     report = json.loads((ROOT/'build'/'nightly-qa'/'report.json').read_text(encoding='utf-8'))
-    if report['python'] != '3.15.2' or report['version'] != VERSION or not report['physics_ok']:
+    if (report['python'] != '3.15.2' or report['version'] != VERSION or not report['physics_ok']
+            or report['archive_frames'] != 8 or report['archive_ending_frames'] != 5):
         raise RuntimeError('Frozen nightly smoke test did not pass.')
     run(sys.executable, ROOT/'tools'/'Package-BaseHalloween.py', '--build-dir', 'build/nightly-game',
         '--version', VERSION, '--exe-name', EXE_NAME, '--archive-only')
@@ -95,7 +97,7 @@ def main():
     if version_check.stdout.strip() != f'CPELoader v{LOADER_VERSION}':
         raise RuntimeError('Packaged CPELoader version command returned an unexpected version.')
     run(folder/'cpe.exe', '-connect', folder, '-cpeloader', timeout=30)
-    output = ROOT/'build'/'nightly-download'
+    output = args.download_dir.resolve()
     output.mkdir(exist_ok=True)
     portable = ROOT/'build'/PORTABLE_NAME
     shutil.copy2(portable, output/portable.name)

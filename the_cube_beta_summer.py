@@ -829,6 +829,8 @@ class GameApp:
         return value, DEFAULT_PORT
 
     def run_simulation(self, peer: NetworkPeer | None = None, is_host: bool = True) -> None:
+        from sky_gate import PlayGate
+        gate = PlayGate()
         authoritative = peer is None or is_host
         world = PhysicsWorld(self.settings["gravity"], self.addons) if authoritative else None
         fall_events = FallEventController(self.settings["event_interval"], self.addons) if authoritative else None
@@ -849,6 +851,8 @@ class GameApp:
                 raw_events = pygame.event.get()
                 if not self.common_events(raw_events):
                     raise SystemExit
+                if gate.process(self, raw_events):
+                    self.dispatch_action({"action": "event"}, peer, is_host, world, fall_events)
                 mouse = pygame.mouse.get_pos()
                 for event in raw_events:
                     if event.type == pygame.KEYDOWN:
@@ -981,6 +985,7 @@ class GameApp:
                     menu_rect,
                 )
                 self.draw_toast()
+                gate.draw(self)
                 pygame.display.flip()
         finally:
             if world:

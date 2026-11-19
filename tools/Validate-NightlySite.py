@@ -43,13 +43,14 @@ def main():
         if not urlsplit(resource).scheme:
             assert (docs/resource).is_file(), f'Missing website asset: {resource}'
     base = 'https://github.com/nuttyinc578/the-cube/releases/download/'
-    for filename in ('The-Cube-Beta-6.4.3-nightly.2-Setup.exe', 'The-Cube-Beta-Christmas-6.4.3-nightly.2-Portable.zip', 'SHA256SUMS.txt'):
-        assert base+'6.4.3-nightly.2/'+filename in page.links
+    for filename in ('The-Cube-Beta-6.4.3-nightly.3-Setup.exe', 'The-Cube-Beta-Christmas-6.4.3-nightly.3-Portable.zip', 'SHA256SUMS.txt'):
+        assert base+'6.4.3-nightly.3/'+filename in page.links
     assert base+'6.4.2/The-Cube-Beta-6.4.2-Setup.exe' in page.links
     assert base+'6.4.2/The-Cube-Beta-Halloween-6.4.2-Portable.zip' in page.links
     assert 'Build not yet available' not in html and 'No matching published package' not in html
     assert 'public GameLift hosting is not live' in html
-    image = (docs/'christmas-home.png').read_bytes()
+    assert 'nightly3-special-player.png' in page.images
+    image = (docs/'nightly3-special-player.png').read_bytes()
     assert image[:8] == b'\x89PNG\r\n\x1a\n' and struct.unpack('>II', image[16:24]) == (1100, 720)
     print('Website passed: stable and nightly downloads, anchors, accessible screenshot and hosting notice.')
 

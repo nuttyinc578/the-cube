@@ -1,6 +1,13 @@
-# The Cube Beta 6.4.3-nightly.2 — Christmas Workshop
+# The Cube Beta 6.4.3-nightly.3 — Christmas Workshop
 
 Experimental Christmas build. **6.4.2 remains the stable release.**
+
+## Changes in nightly.3
+
+- Optional GitHub sign-in: press **G** during Christmas loading, or select **Sign in with GitHub** from Home. The loading screen shows authentication status and a device code. Approve in your browser only. Guest play stays available; the username is session-only and the token is never saved. This is separate from GameLift, PLUS membership, and the fictional terminal.
+- **Security ??? → Take Sky Key.** Enter solo or multiplayer, hold **E** for about 1.35 seconds (or hold the on-screen button), then click the DVD. Click the computer to insert it, or return to the terminal and type `insert dvd`. Use **Left/Right** to browse and **Esc** to return. The quest is local to each player. A quick E tap still triggers a seasonal event.
+- The DVD covers 6.0 through 1.0. The 6.0 and 5.1 frames come from archived source rather than the installer binaries; the gallery labels them.
+- On the last DVD frame, choose **Credits**, then **DEVS ONLY** to earn **You are a special**. Fly through the Sky Gate, main menu, binary code map, CPE, and game menu code. The achievement is saved locally. **Yes** offers official GitHub issue, fork, and compare links; **No** returns to the game. The game never submits anything automatically or grants contributor access.
 
 ## Changes in nightly.2
 

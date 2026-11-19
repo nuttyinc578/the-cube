@@ -392,11 +392,14 @@ def _confirm_recovery(app: Any, plan: RecoveryPlan) -> None:
 
 
 def _broken_lands_terminal(app: Any) -> None:
+    from sky_gate import stage, terminal_command
     lines = [
         "THE BROKEN LANDS RECOVERY NODE AWAKENED.",
         "All surviving versions report through OG.exe.",
         "Click LOGIN on the abandoned computer or type login.",
         "After login: OG.exe -list or OG.exe -<version>.",
+        "SKY SECURITY: a brass key rests beside the terminal. Type key, or pick it up below.",
+        "DVD drive online. Type insert dvd after recovering the disc.",
     ]
     command = ""
     unlocked = False
@@ -407,6 +410,7 @@ def _broken_lands_terminal(app: Any) -> None:
             if not app.common_events(events):
                 return
             login_rect = pygame.Rect(WIDTH - 210, HEIGHT - 100, 180, 38)
+            key_rect = pygame.Rect(WIDTH - 410, HEIGHT - 100, 180, 38)
             execute: str | None = None
             for event in events:
                 if event.type == pygame.KEYDOWN:
@@ -419,6 +423,8 @@ def _broken_lands_terminal(app: Any) -> None:
                 elif event.type == pygame.TEXTINPUT:
                     if len(command) < 72 and event.text.isprintable():
                         command += event.text
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and key_rect.collidepoint(event.pos):
+                    execute = 'insert dvd' if stage(app) >= 3 else 'key'
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and login_rect.collidepoint(event.pos):
                     if not unlocked:
                         execute = "login"
@@ -440,8 +446,12 @@ def _broken_lands_terminal(app: Any) -> None:
                         lowered = execute.lower()
                     else:
                         execute = ""
-                if execute and lowered in {"help", "?"}:
+                sky_result = terminal_command(app, lowered) if execute else ()
+                if sky_result:
+                    lines.extend(sky_result)
+                elif execute and lowered in {"help", "?"}:
                     lines.extend(("login                 unlock the OG recovery computer", "OG.exe -list          show recoverable versions", "OG.exe -<version>     download, back up, and prepare replacement", "clear                 clear the terminal", "exit                  return to the door"))
+                    lines.extend(("key                   collect the Sky Gate key", "insert dvd            read the archive disc"))
                 elif execute and lowered == "clear":
                     lines = []
                 elif execute and lowered in {"exit", "quit"}:
@@ -465,6 +475,10 @@ def _broken_lands_terminal(app: Any) -> None:
                     lines.append("! UNKNOWN COMMAND. TYPE help.")
 
             _terminal_lines(app, lines, command, unlocked)
+            pygame.draw.rect(app.screen, ORANGE, key_rect, border_radius=5)
+            caption = ("INSERT DVD" if stage(app) >= 3 else ("TAKE SKY KEY" if stage(app) == 0 else "SKY KEY FOUND"))
+            label = app.small.render(caption, True, INK)
+            app.screen.blit(label, label.get_rect(center=key_rect.center))
             pygame.display.flip()
             app.clock.tick(FPS)
     finally:
