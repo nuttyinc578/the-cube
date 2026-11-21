@@ -2,7 +2,7 @@
 
 Changes are in **the game**, not CPE Flasher. The normal `the_cube_beta_summer.py` entry point installs the Halloween menu, theme, music screen and in-game Broken Lands door. Despite its historical filename, it is the Halloween base game. No flashing or loader unlocking is needed to use its seasonal UI. Existing user modifications are preserved.
 
-The multiplayer menu now has **Amazon GameLift Online**, alongside existing LAN host/join. Online mode uses Nuttyinc Cloud sign-in, requests a reservation from your HTTPS backend and connects to the reserved game-server DNS/port using certificate-verified TLS. It sends the player session ID in a `join` JSON frame; later gameplay uses the game's existing newline-delimited action/snapshot protocol. AWS keys never belong in the game. Authentication credentials stay in memory.
+The multiplayer menu has **Amazon GameLift Online** alongside existing LAN host/join. Online mode requires [Microsoft sign-in](MICROSOFT_SIGN_IN.md), requests a reservation from your HTTPS backend, and connects to the reserved game-server DNS/port using certificate-verified TLS. It sends the player session ID in a `join` JSON frame; gameplay uses the game's existing newline-delimited action/snapshot protocol. AWS keys never belong in the game. Authentication credentials stay in memory.
 
 ## Dedicated server and bounded hosting test
 
@@ -28,7 +28,7 @@ The dedicated host is now implemented in `dedicated_server/main.go`, using the o
 
 Local verification passed with two real TLS clients receiving the same authoritative physics world. The unit tests also cover reservations and scheduled shutdown. These checks do not prove that AWS fleet installation or public online play works.
 
-`tools/Deploy-GameLiftTest.py` deploys only a bounded, explicitly approved test: one Linux c5.large instance in Canada Central, one four-player game session, and a Cognito-protected HTTP reservation API. The `prepare` phase arms AWS-side cleanup before the `start` phase can create a fleet. Its deadline is two hours after preparation, not two hours after the server becomes ready. Deletion is asynchronous and this is not a hard spending cap. Backend, transfer, storage, and tax charges can be additional. It does not enable indefinite hosting or autoscaling.
+`tools/Deploy-GameLiftTest.py` deploys only a bounded, explicitly approved test: one Linux c5.large instance in Canada Central, one four-player game session, and a Microsoft Entra-protected HTTP reservation API. The `prepare` phase arms AWS-side cleanup before the `start` phase can create a fleet. Its deadline is two hours after preparation, not two hours after the server becomes ready. Deletion is asynchronous and this is not a hard spending cap. Backend, transfer, storage, and tax charges can be additional. It does not enable indefinite hosting or autoscaling.
 
 Live status and exact resource IDs are recorded locally in `build/gamelift-test-deployment/resources.json` after each deployment step. No deployed endpoint should be advertised until fleet activation and a two-client internet connection test pass. No AWS credentials are included in the game or server upload. The shutdown function can only target this deployment's recorded IDs and unique names; its deletion permissions are narrowed to the created resources.
 
@@ -39,7 +39,7 @@ Deployment components:
 - `tools/Verify-DedicatedServer.py`: two-player local TLS integration check.
 - `multiplayer_backend/session_api.py`: fixed-session reservations behind API Gateway JWT authorization.
 - `multiplayer_backend/test_shutdown.py`: scheduled fleet and test API deletion.
-- `tools/Deploy-GameLiftTest.py --phase prepare` then `--phase start`: approved operator workflow, not an automatic game update. Inspect existing state before any rerun to avoid duplicates.
+- `tools/Deploy-GameLiftTest.py` with `--phase prepare` then `--phase start`, and `--microsoft-api-app-id` on both calls: approved operator workflow, not an automatic game update. Inspect existing state before any rerun to avoid duplicates.
 
 The schedule removes fleet capacity and the HTTP API. Idle Lambda functions, IAM roles, scheduler groups, logs, and uploaded build metadata may remain for inspection and require separate cleanup. Review production security, monitoring, billing controls, account recovery, and availability before a public release.
 
@@ -47,10 +47,10 @@ Deployment checklist (the bounded test tooling implements these server/backend s
 
 1. Build a dedicated authoritative server implementing `cube-json-tls-v1`. Integrate a supported GameLift Server SDK (C++, C# or Go) for InitSDK, ProcessReady, ActivateGameSession, AcceptPlayerSession, RemovePlayerSession and shutdown/health callbacks. A Python CPE physics worker can run behind that native host. Do not report a reservation as accepted merely because the client supplies a player-session ID.
 2. Deploy a TLS-enabled fleet, configure its game port and create active game sessions. Server must send existing snapshot messages and validate/rate-limit each client's actions, bound object/particle counts and maintain separate player drag ownership. Never use client snapshots as authoritative physics.
-3. Deploy an authenticated HTTPS `POST /sessions/reserve` service. Verify Cognito access JWT signature, issuer, client_id, token_use and expiry using a maintained JWT library; derive the player identity from verified `sub`, not JSON supplied by the player. Enforce throttling and per-player reservation limits. The `multiplayer_backend/gamelift_reservations.py` adapter is business logic, **not an exposed HTTP endpoint or authentication layer**. Use its `reserve_verified_player` only AFTER token verification. It joins an existing active game, not creates servers on demand. Handle full-session races at the API boundary with a retryable response.
+3. Deploy an authenticated HTTPS `POST /sessions/reserve` service. Have API Gateway validate the Microsoft access token's signature, issuer, expiry, API audience and delegated `Cube.Online` scope. The handler also checks the tenant and sign-in client and derives the player identity from verified claims, not a player-supplied JSON field. Enforce throttling and per-player reservation limits. The `multiplayer_backend/gamelift_reservations.py` adapter is business logic, **not an exposed HTTP endpoint or authentication layer**. Use its `reserve_verified_player` only after token verification. It joins an existing active game, not creates servers on demand. Handle full-session races at the API boundary with a retryable response.
 4. Give only the BACKEND runtime a scoped GameLift role for search/reservations; use normal AWS credential providers there. Backend dependencies include boto3; the base game does not need it. Configure backend `AWS_REGION` and `GAMELIFT_FLEET_ID`. There is intentionally no automatic public endpoint or permissive IAM template.
-5. Add Cognito callback `http://localhost:8765/callback` for development, use a public no-secret client with code + PKCE and `openid email`. Review native callback strategy before public production release. Browser registration on CloudFront is not a launcher/game authentication session.
-6. Beside the base game's EXE create `gamelift.json` containing `{"backend_url": "https://YOUR-AUTHENTICATED-BACKEND"}`. Without this file the GameLift button explains setup is needed. Do not put tokens, passwords or AWS keys in it.
+5. Configure the public Entra client and the Online API permission as described in [Microsoft sign-in setup](MICROSOFT_SIGN_IN.md).
+6. Beside the base game's EXE create `gamelift.json` with the reservation `backend_url` and the `microsoft_api_app_id`. Without this file the GameLift button explains setup is needed. Do not put tokens, passwords or AWS keys in it.
 
 Backend response contract:
 
@@ -58,7 +58,7 @@ Backend response contract:
 {"protocol":"cube-json-tls-v1","dns_name":"YOUR-TLS-SERVER-DNS","port":27100,"player_session_id":"psess-RESERVATION-ID"}
 ```
 
-Do not advertise this build as live GameLift multiplayer merely because a local build passed. Check the deployment result and public two-player test. Browser Cognito sign-in also needs an end-user verification; no account password is collected by the deployment tools.
+Do not advertise this build as live GameLift multiplayer merely because a local build passed. Check the deployment result, public two-player test and end-user Microsoft sign-in. No account password is collected by the deployment tools.
 
 ## Local verification/build
 

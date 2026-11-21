@@ -29,7 +29,7 @@ def main():
     args = parser.parse_args()
     if sys.version_info[:3] != (3, 15, 2):
         raise RuntimeError('This nightly requires Python 3.15.2. Create a dedicated venv and install requirements-nightly.txt.')
-    for name, version in (('pygame-ce', '2.5.8'), ('pymunk', '7.3.1'), ('pyinstaller', '6.22.3')):
+    for name, version in (('pygame-ce', '2.5.8'), ('pymunk', '7.3.1'), ('pyinstaller', '6.22.3'), ('msal', '1.39.0')):
         if importlib.metadata.version(name) != version:
             raise RuntimeError(f'Install the pinned nightly dependency: {name}=={version}')
     os.environ.update(SDL_VIDEODRIVER='dummy', SDL_AUDIODRIVER='dummy', PYGAME_HIDE_SUPPORT_PROMPT='1')
@@ -45,7 +45,7 @@ def main():
     (ROOT/'build'/'christmas-icon.ico').write_bytes(
         struct.pack('<HHH', 0, 1, 1) + struct.pack('<BBBBHHII', 64, 64, 0, 0, 1, 32, len(icon_data), 22) + icon_data)
     if not args.skip_tests:
-        run(sys.executable, '-m', 'unittest', 'test_sky_gate', 'test_github_signin', 'test_cpe_repair', 'test_christmas', 'test_nightly', 'test_cpeloader', 'test_halloween_music',
+        run(sys.executable, '-m', 'unittest', 'test_sky_gate', 'test_github_signin', 'test_microsoft_login', 'test_cpe_repair', 'test_christmas', 'test_nightly', 'test_cpeloader', 'test_halloween_music',
             'test_og_recovery', 'test_nuttymod_isolation', 'test_error_update', 'test_summer_game',
             'test_theme_system', 'test_legacy_versions', 'test_cube_launcher', 'test_gamelift',
             'test_dedicated_server', 'cpe.tests.test_cpe', '-v')

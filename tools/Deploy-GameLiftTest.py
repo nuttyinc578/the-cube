@@ -17,10 +17,11 @@ import time
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from microsoft_login import AUTHORITY, CLIENT_ID, ONLINE_PERMISSION, TENANT_ID, api_application_id
+
 REGION = 'ca-central-1'
 ACCOUNT = '021891613113'
-CLIENT = 'q2u1oorqn5lt2v89abisrg7rv'
-POOL = 'ca-central-1_KqtmaZCPv'
 AWS = shutil.which('aws')
 
 
@@ -136,6 +137,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--phase', choices=['prepare', 'start', 'refresh-start', 'retry', 'prepare-retry'], required=True)
     parser.add_argument('--state-dir', default='build/gamelift-test-deployment')
+    parser.add_argument('--microsoft-api-app-id', required=True, type=api_application_id,
+                        help='Application ID of the separate Entra Online API exposing Cube.Online')
     parser.add_argument('--reuse-build', help='Previously verified GameLift Linux build ID; avoids another upload.')
     parser.add_argument('--deadline-epoch', type=float, help='Keep an existing approved test deadline for an in-window retry.')
     parser.add_argument('--server-payload', default='build/gamelift-linux-server')
@@ -376,22 +379,25 @@ def main():
         state['roles'].append(api_role_name)
         state['api_function_name'] = state['prefix']+'-Reserve'
         api_function = function(state['api_function_name'], api_role, 'session_api',
-            {'TEST_DEADLINE': state['deadline_epoch'], 'COGNITO_CLIENT_ID': CLIENT, 'GAME_SESSION_ID': state['game_session_id']}, folder)
+            {'TEST_DEADLINE': state['deadline_epoch'], 'GAME_SESSION_ID': state['game_session_id'],
+             'MICROSOFT_TENANT_ID': TENANT_ID, 'MICROSOFT_CLIENT_ID': CLIENT_ID,
+             'MICROSOFT_API_APP_ID': args.microsoft_api_app_id}, folder)
         wait_function(state['api_function_name'])
         api = aws('apigatewayv2', 'create-api', Name=state['prefix']+'-Api', ProtocolType='HTTP')
         state['api_id'], state['backend_url'] = api['ApiId'], api['ApiEndpoint']
+        state['microsoft_api_app_id'] = args.microsoft_api_app_id
         write_state(folder, state)
         for statement in stop_policy['Statement']:
             if 'apigateway:DELETE' in statement.get('Action', []):
                 statement['Resource'] = [f'arn:aws:apigateway:{REGION}::/apis', f'arn:aws:apigateway:{REGION}::/apis/{api["ApiId"]}']
         aws('iam', 'put-role-policy', RoleName=state['roles'][0], PolicyName='GeneratedGameRuntime', PolicyDocument=json.dumps(stop_policy))
-        auth = aws('apigatewayv2', 'create-authorizer', ApiId=api['ApiId'], Name='NuttyincCloud', AuthorizerType='JWT',
-            IdentitySource=['$request.header.Authorization'], JwtConfiguration={'Audience': [CLIENT],
-                'Issuer': 'https://cognito-idp.'+REGION+'.amazonaws.com/'+POOL})
+        auth = aws('apigatewayv2', 'create-authorizer', ApiId=api['ApiId'], Name='MicrosoftEntra', AuthorizerType='JWT',
+            IdentitySource=['$request.header.Authorization'], JwtConfiguration={'Audience': [args.microsoft_api_app_id],
+                'Issuer': AUTHORITY+'/v2.0'})
         integration = aws('apigatewayv2', 'create-integration', ApiId=api['ApiId'], IntegrationType='AWS_PROXY',
             IntegrationUri=api_function, PayloadFormatVersion='2.0', TimeoutInMillis=25000)
         aws('apigatewayv2', 'create-route', ApiId=api['ApiId'], RouteKey='POST /sessions/reserve',
-            AuthorizationType='JWT', AuthorizerId=auth['AuthorizerId'], AuthorizationScopes=['openid'],
+            AuthorizationType='JWT', AuthorizerId=auth['AuthorizerId'], AuthorizationScopes=[ONLINE_PERMISSION],
             Target='integrations/'+integration['IntegrationId'])
         aws('lambda', 'add-permission', FunctionName=state['api_function_name'], StatementId='OnlyThisApi',
             Action='lambda:InvokeFunction', Principal='apigateway.amazonaws.com', SourceAccount=ACCOUNT,
@@ -401,15 +407,6 @@ def main():
         variables.update({'TEST_API_ID': api['ApiId'], 'TEST_API_NAME': state['prefix']+'-Api'})
         aws('lambda', 'update-function-configuration', FunctionName=state['stop_function_name'], Environment={'Variables': variables})
         wait_function(state['stop_function_name'])
-        # Read-modify-write the EXISTING client, preserving every accepted field.
-        client = aws('cognito-idp', 'describe-user-pool-client', UserPoolId=POOL, ClientId=CLIENT)['UserPoolClient']
-        callback = 'http://localhost:8765/callback'
-        if callback not in client.get('CallbackURLs', []):
-            skeleton = subprocess.run([AWS, 'cognito-idp', 'update-user-pool-client', '--generate-cli-skeleton', 'input'], text=True, capture_output=True, check=True)
-            accepted = json.loads(skeleton.stdout)
-            parameters = {key: value for key, value in client.items() if key in accepted and value is not None}
-            parameters.update({'UserPoolId': POOL, 'ClientId': CLIENT, 'CallbackURLs': client.get('CallbackURLs', [])+[callback]})
-            aws('cognito-idp', 'update-user-pool-client', **parameters)
         state['status'] = 'hosting'
         write_state(folder, state)
         print('Hosting prepared: '+state['backend_url']+'; shutdown '+state['deadline'], flush=True)

@@ -1,0 +1,14 @@
+{
+  "name": "cube-beta-site-auth",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild membership.js callback.js --bundle --minify --format=esm --legal-comments=linked --outdir=../../docs/auth-build"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "5.30.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

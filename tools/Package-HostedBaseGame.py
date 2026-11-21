@@ -31,10 +31,11 @@ def main():
     archive = ROOT/'build'/('Cube-Beta-Halloween-GameLift-Test-'+state['prefix'].removeprefix('CubeBetaTest-')+'.zip')
     if archive.exists():
         raise RuntimeError('This test archive already exists; inspect it instead of overwriting it.')
-    write_json(folder/'gamelift.json', {'backend_url': state['backend_url'], 'test_expires_at': state['deadline']})
+    write_json(folder/'gamelift.json', {'backend_url': state['backend_url'], 'test_expires_at': state['deadline'],
+                                     'microsoft_api_app_id': state['microsoft_api_app_id']})
     shutil.copy2(ROOT/'GAMELIFT_SETUP.md', folder/'GAMELIFT_SETUP.md')
     (folder/'HOSTED_TEST.txt').write_text('Cube Beta Halloween: temporary GameLift test.\n'
-        'Open Multiplayer > Amazon GameLift Online and sign in to Nuttyinc Cloud.\n'
+        'Open Multiplayer > Amazon GameLift Online and sign in with Microsoft.\n'
         'The game server and reservation API are scheduled for deletion at '+state['deadline']+' UTC.\n'
         'LAN and single-player remain available after shutdown. Browser sign-in still needs user verification.\n', encoding='utf-8')
     write_json(folder/'cpeloader_manifest.json', {'files': snapshot(folder)})

@@ -1,10 +1,25 @@
 import importlib.util
+import hashlib
 import os
 import sys
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 from dedicated_server.worker import Simulation
+from microsoft_login import AUTHORITY, CLIENT_ID, ONLINE_PERMISSION, TENANT_ID
+
+
+API_APP_ID = '11111111-2222-4333-8444-555555555555'
+PLAYER_OID = '11111111-2222-4333-8444-666666666666'
+ENTRA_ENV = {'TEST_DEADLINE': '9999999999', 'GAME_SESSION_ID': 'test-session',
+             'MICROSOFT_TENANT_ID': TENANT_ID, 'MICROSOFT_CLIENT_ID': CLIENT_ID,
+             'MICROSOFT_API_APP_ID': API_APP_ID}
+ENTRA_CLAIMS = {'iss': AUTHORITY+'/v2.0', 'ver': '2.0', 'tid': TENANT_ID, 'aud': API_APP_ID,
+                'azp': CLIENT_ID, 'scp': ONLINE_PERMISSION, 'oid': PLAYER_OID}
+
+
+def jwt_event(claims):
+    return {'requestContext': {'authorizer': {'jwt': {'claims': claims}}}}
 
 
 class DedicatedTests(unittest.TestCase):
@@ -45,13 +60,34 @@ class DedicatedTests(unittest.TestCase):
         service.describe_player_sessions.return_value = {'PlayerSessions': []}
         service.create_player_session.return_value = {'PlayerSession': {'DnsName': 'test.example.com', 'Port': 27100,
             'PlayerSessionId': 'psess-test'}}
-        with patch.dict(os.environ, {'TEST_DEADLINE': '9999999999', 'COGNITO_CLIENT_ID': 'test-client', 'GAME_SESSION_ID': 'test-session'}):
-            result = module.handler({'requestContext': {'authorizer': {'jwt': {'claims': {
-                'token_use': 'access', 'client_id': 'test-client', 'sub': 'test-player'}}}}}, None)
+        with patch.dict(os.environ, ENTRA_ENV):
+            result = module.handler(jwt_event(ENTRA_CLAIMS), None)
         self.assertEqual(result['statusCode'], 200)
         self.assertNotIn('PlayerId', service.describe_player_sessions.call_args.kwargs)
         self.assertEqual(service.create_player_session.call_args.kwargs['GameSessionId'], 'test-session')
-        self.assertEqual(len(service.create_player_session.call_args.kwargs['PlayerId']), 64)
+        self.assertEqual(service.create_player_session.call_args.kwargs['PlayerId'],
+                         hashlib.sha256(f'{TENANT_ID}:{PLAYER_OID}'.encode()).hexdigest())
+
+    def test_online_rejects_unscoped_tokens_and_other_providers(self):
+        module, service = self.load_handler('session_api')
+        wrong_claims = [
+            {},
+            {'token_use': 'access', 'client_id': 'cognito', 'sub': 'player'},
+            {**ENTRA_CLAIMS, 'scp': ''},
+            {**ENTRA_CLAIMS, 'scp': 'Cube.Online.Extra'},
+            {**ENTRA_CLAIMS, 'aud': CLIENT_ID},
+            {**ENTRA_CLAIMS, 'azp': API_APP_ID},
+            {**ENTRA_CLAIMS, 'tid': 'another-tenant'},
+            {**ENTRA_CLAIMS, 'iss': 'https://another.issuer.example/'},
+            {**ENTRA_CLAIMS, 'ver': '1.0'},
+            {**ENTRA_CLAIMS, 'oid': ''},
+        ]
+        with patch.dict(os.environ, ENTRA_ENV):
+            for claims in wrong_claims:
+                with self.subTest(claims=claims):
+                    self.assertEqual(module.handler(jwt_event(claims), None)['statusCode'], 401)
+        service.describe_player_sessions.assert_not_called()
+        service.create_player_session.assert_not_called()
 
     def test_shutdown_armed_does_not_delete_early(self):
         module, service = self.load_handler('test_shutdown')

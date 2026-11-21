@@ -7,6 +7,11 @@ by the packager. pygame-ce is a community-maintained implementation of the
 pygame API; its code is not covered by this game's MIT License.
 Project/source: https://github.com/pygame-community/pygame-ce
 Pymunk source: https://github.com/viblo/pymunk
+
+Microsoft sign-in uses Microsoft Authentication Library for Python and
+Microsoft Authentication Library for JavaScript (both MIT).
+Python SDK: https://github.com/AzureAD/microsoft-authentication-library-for-python
+Browser SDK: https://github.com/AzureAD/microsoft-authentication-library-for-js
 Python source: https://www.python.org/downloads/release/python-3152/
 
 Music: "Halloween Music"

@@ -238,3 +238,5 @@ cpeloader_manifest.json
 userdata/
 flash_scripts/
 cpe-flash-profile.json
+/docs/auth-build/
+/tools/site-auth/node_modules/
