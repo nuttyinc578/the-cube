@@ -73,7 +73,7 @@ def main():
                 raise RuntimeError('Unexpected reservation API status: '+str(error.code)) from None
         proof = {'two_public_tls_players': True, 'unsigned_api_status': 401,
             'fleet_id': state['fleet_id'], 'backend_url': state['backend_url'],
-            'verified_at_epoch': time.time(), 'cognito_browser_login_verified': False}
+            'verified_at_epoch': time.time(), 'microsoft_browser_login_verified': False}
         (state_folder/'hosted-verification.json').write_text(json.dumps(proof, indent=2), encoding='utf-8')
         print('PASS: two public TLS players shared authoritative CPE physics; reservation API requires sign-in.')
     finally:

@@ -1,4 +1,4 @@
-"""Backend service adapter; invoke ONLY after verifying the caller's Cognito access JWT.
+"""Backend service adapter; invoke ONLY after verifying the caller's scoped access JWT.
 
 Does not create fleets/sessions or deploy an HTTP service. Server-only dependency: boto3.
 """

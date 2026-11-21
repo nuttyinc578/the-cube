@@ -95,6 +95,9 @@ def run(report_path):
         for _ in range(60):
             world.update(1/60, 0, 1)
         assert world.snapshot()
+        # Import the bundled SDK without constructing a client or making network calls.
+        from msal import PublicClientApplication
+        assert callable(PublicClientApplication.acquire_token_interactive)
         # PyInstaller metadata is optional; pygame.version is the actual imported runtime.
         report = {'version': VERSION, 'python': platform.python_version(),
             'pygame': pygame.version.ver, 'pygame_ce': bool(getattr(pygame, 'IS_CE', False)),
@@ -102,7 +105,7 @@ def run(report_path):
             'archive_ending_frames': len(SCENES),
             'keyboard_ok': True, 'instance_menu_binding_ok': True,
             'loader_default': 'locked', 'cpeloader_version': '2', 'cpe_version': '0.0.3-nightly',
-            'cache_protection': True, 'network_used': False}
+            'cache_protection': True, 'microsoft_sdk_packaged': True, 'network_used': False}
         report_path.write_text(json.dumps(report, indent=2), encoding='utf-8')
     finally:
         if world is not None:

@@ -32,10 +32,13 @@ def main():
     page = Page()
     page.feed(html)
     account = 'https://the-cube-beta-marketplace.memberful.com/account'
-    assert account in page.links
+    assert 'plus.html' in page.links and account not in page.links
     membership = (docs/'plus.html').read_text(encoding='utf-8')
-    assert account in membership and all('src="memberful.js"' in s for s in (html, membership))
-    assert 'https://js.memberful.com/embed.js' in (docs/'memberful.js').read_text(encoding='utf-8')
+    assert account not in membership and 'id="membership-account" hidden' in membership
+    assert 'id="microsoft-login" disabled' in membership
+    assert 'src="auth-build/membership.js"' in membership
+    assert 'src="auth-build/callback.js"' in (docs/'microsoft-callback.html').read_text(encoding='utf-8')
+    assert account in (ROOT/'tools/site-auth/membership.js').read_text(encoding='utf-8')
     for link in page.links:
         if link.startswith('#'):
             assert link[1:] in page.ids, f'Missing anchor: {link}'

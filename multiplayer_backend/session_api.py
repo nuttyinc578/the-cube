@@ -15,16 +15,37 @@ def response(status, message):
         'body': json.dumps(message)}
 
 
+def microsoft_player(event):
+    # Only API Gateway's JWT authorizer can populate this trusted context.
+    # The route verifies the signature, expiry, audience and delegated scope.
+    tenant = os.environ.get('MICROSOFT_TENANT_ID')
+    client = os.environ.get('MICROSOFT_CLIENT_ID')
+    audience = os.environ.get('MICROSOFT_API_APP_ID')
+    if not (tenant and client and audience):
+        return None
+    claims = event.get('requestContext', {}).get('authorizer', {}).get('jwt', {}).get('claims', {})
+    if not isinstance(claims, dict):
+        return None
+    scope = claims.get('scp')
+    identity = claims.get('oid')
+    if (claims.get('iss') != f'https://login.microsoftonline.com/{tenant}/v2.0'
+            or claims.get('tid') != tenant or claims.get('ver') != '2.0'
+            or claims.get('aud') != audience or claims.get('azp') != client
+            or not isinstance(scope, str) or 'Cube.Online' not in scope.split()
+            or not isinstance(identity, str) or not identity):
+        return None
+    return hashlib.sha256(f'{tenant}:{identity}'.encode()).hexdigest()
+
+
 def handler(event, context):
     if time.time() >= float(os.environ['TEST_DEADLINE']):
         return response(410, {'error': 'This test has ended.'})
-    claims = event.get('requestContext', {}).get('authorizer', {}).get('jwt', {}).get('claims', {})
-    if claims.get('token_use') != 'access' or claims.get('client_id') != os.environ['COGNITO_CLIENT_ID'] or not claims.get('sub'):
-        return response(401, {'error': 'Sign in with Nuttyinc Cloud.'})
+    player = microsoft_player(event)
+    if player is None:
+        return response(401, {'error': 'Sign in with Microsoft to play online.'})
     session = os.environ.get('GAME_SESSION_ID', '')
     if not session:
         return response(503, {'error': 'Game server is not ready.'})
-    player = hashlib.sha256(str(claims['sub']).encode()).hexdigest()
     try:
         # AWS accepts ONE identity selector, not GameSessionId and PlayerId together.
         # Status filtering bounds results to the four slots in this test session.
