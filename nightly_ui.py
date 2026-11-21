@@ -102,8 +102,10 @@ def render_home(app, ticks=0):
     text(app, 'YOUR PHYSICS. YOUR WORLD.', (291, 37), a)
     text(app, 'Welcome back.', (289, 70), font=app.large)
     login = getattr(app, 'github_login', '')
-    text(app, 'Signed in as @' + login if login else 'Guest play ready. Find the Sky Gate key in Security ???.', (292, 130), SECONDARY)
-    if app.settings.get('special_player_unlocked') is True:
+    special = app.settings.get('special_player_unlocked') is True
+    greeting = 'Guest play ready.' if special else 'Guest play ready. Find the Sky Gate key in Security ???.'
+    text(app, 'Signed in as @' + login if login else greeting, (292, 130), SECONDARY)
+    if special:
         text(app, '✦  SPECIAL PLAYER', (896, 48), a, app.tiny)
     panel(app, pygame.Rect(283, 179, 793, 238), color=(32, 31, 47))
     text(app, 'CHRISTMAS / FLUENT EXPERIENCE', (311, 204), a)

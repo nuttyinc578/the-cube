@@ -24,6 +24,11 @@ def stage(app):
     return n if type(n) is int and 0 <= n <= 4 else 0
 
 
+def gate_retired(app):
+    """Once earned, Special Player also retires the in-world aperture."""
+    return app.settings.get('special_player_unlocked') is True
+
+
 def advance(app, expected):
     if stage(app) != expected:
         return False
@@ -34,6 +39,8 @@ def advance(app, expected):
 
 def terminal_command(app, command):
     if command in ('key', 'take key', 'sky key'):
+        if gate_retired(app):
+            return ('SKY GATE CLOSED. SPECIAL PLAYER STATUS SAVED.',)
         fresh = advance(app, 0)
         return ('SKY GATE KEY ACQUIRED.' if fresh else 'SKY GATE KEY ALREADY RECOVERED.',
                 'Enter solo or multiplayer. Hold E to open the Sky Gate.')
@@ -140,6 +147,9 @@ class PlayGate:
                 self.view = None
             events.clear()  # physics and network still tick; only local inputs are muted
             return False
+        if gate_retired(app):
+            self.held = self.origin = None
+            return False
         tap = False
         for event in list(events):
             if event.type == pygame.WINDOWFOCUSLOST:
@@ -177,6 +187,8 @@ class PlayGate:
     def draw(self, app, now=None):
         if self.view:
             self.view.draw(app)
+            return
+        if gate_retired(app):
             return
         n = stage(app)
         color = (152, 240, 215)

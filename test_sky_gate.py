@@ -53,6 +53,33 @@ class SkyGateTests(unittest.TestCase):
         self.play.process(self.app,[],now=12)
         self.assertEqual(stage(self.app),1)
 
+    def test_special_player_save_retires_gate_without_intercepting_play_controls(self):
+        # Old saves already contain the achievement and a stage-4 aperture.
+        saved_settings = {'sky_gate_stage': 4, 'special_player_unlocked': True}
+        reopened = SimpleNamespace(settings=saved_settings.copy())
+        gate = PlayGate()
+        events = [key(pygame.KEYDOWN, pygame.K_e),
+                  pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=gate.computer.center)]
+        self.assertFalse(gate.process(reopened, events, now=10))
+        self.assertEqual(len(events), 2)
+        self.assertIsNone(gate.view)
+        with patch('sky_gate.panel') as panel, patch('sky_gate.pygame.draw.ellipse') as portal:
+            gate.draw(reopened)
+        panel.assert_not_called()
+        portal.assert_not_called()
+        self.assertIn('CLOSED', terminal_command(reopened, 'key')[0])
+        self.assertEqual(reopened.settings, saved_settings)
+
+    def test_finishing_the_achievement_keeps_the_current_ending_open(self):
+        self.app.settings.update(special_player_unlocked=True, sky_gate_stage=4)
+        self.play.view = ArchiveView()
+        view = self.play.view
+        self.play.process(self.app, [key(pygame.KEYDOWN, pygame.K_RIGHT)], now=11)
+        self.assertIs(self.play.view, view)
+        self.assertEqual(view.index, 1)
+        self.play.process(self.app, [key(pygame.KEYDOWN, pygame.K_ESCAPE)], now=12)
+        self.assertIsNone(self.play.view)
+
     def test_gallery_renders_all_slots(self):
         pygame.init()
         self.addCleanup(pygame.quit)
